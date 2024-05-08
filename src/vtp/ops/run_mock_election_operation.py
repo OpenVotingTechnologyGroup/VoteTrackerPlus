@@ -266,12 +266,12 @@ class RunMockElectionOperation(Operation):
                 flush=True,
             )
         # tally the contests
-        tally_contests = TallyContestsOperation(
-            election_data_dir=self.election_data_dir,
-            verbosity=self.verbosity,
-            printonly=self.printonly,
-        )
-        tally_contests.run()
+        # tally_contests = TallyContestsOperation(
+        #     election_data_dir=self.election_data_dir,
+        #     verbosity=self.verbosity,
+        #     printonly=self.printonly,
+        # )
+        # tally_contests.run()
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-arguments

@@ -204,8 +204,16 @@ class MergeContestsOperation(Operation):
             count = len(batch) - minimum_cast_cache
         loop = count
         self.imprimir(f"Merging {count} contests for contest {uid}", 4)
+        prioritize_pattern = re.compile(r"/p")
         while loop:
-            pick = random.randrange(len(batch))
+            # If there are any prioritized branches, pick them first
+            pick = -1
+            for count, branch in enumerate(batch):
+                if prioritize_pattern.search(branch):
+                    pick = count
+                    break
+            if pick == -1:
+                pick = random.randrange(len(batch))
             branch = batch[pick]
             self.merge_contest_branch(branch, remote)
             # End of loop maintenance

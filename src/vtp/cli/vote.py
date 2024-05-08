@@ -53,9 +53,16 @@ ballot is chosen.
     Arguments.add_blank_ballot(parser)
     Arguments.add_merge_contests(parser)
     parser.add_argument(
+        "-r",
         "--version_receipts",
         action="store_true",
         help="when set will capture and version the ballot receipts",
+    )
+    parser.add_argument(
+        "-p",
+        "--prioritize",
+        action="store_true",
+        help="when set the accepted ballot will be tabulated with priority",
     )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
@@ -89,6 +96,7 @@ def main():
         blank_ballot=parsed_args.blank_ballot,
         merge_contests=parsed_args.merge_contests,
         version_receipts=parsed_args.version_receipts,
+        prioritize=parsed_args.prioritize,
     )
 
 

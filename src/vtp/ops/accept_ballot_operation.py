@@ -75,10 +75,15 @@ class AcceptBallotOperation(Operation):
         # ZZZ - need to deal with a rolling 100 window
         return random.choice(commits)
 
-    def new_branch_name(self, contest, style: str) -> str:
+    def new_branch_name(self, contest, style: str, prioritize: bool = False) -> str:
         """Return the new branch name for contest CVRs and ballot receipts"""
         if style == "contest":
             # branch = contest.get('uid') + "/" + str(uuid.uuid1().hex)[0:10]
+            if prioritize:
+                return (
+                    f"{Globals.get('CONTEST_FILE_SUBDIR')}/{contest.get('uid')}/p"
+                    f"{secrets.token_hex(5)}"
+                )
             return (
                 f"{Globals.get('CONTEST_FILE_SUBDIR')}/{contest.get('uid')}/"
                 f"{secrets.token_hex(5)}"
@@ -95,6 +100,7 @@ class AcceptBallotOperation(Operation):
         contest: str,
         ref_branch: str,
         style: str = "contest",
+        prioritize: bool = False,
         initial: bool = True,
     ):
         """Will checkout a new branch for a specific contest or
@@ -113,7 +119,9 @@ class AcceptBallotOperation(Operation):
             else self.get_random_branchpoint(ref_branch)
         )
         # and attempt at a new unique branch
-        branch = self.new_branch_name(contest, style)
+        branch = self.new_branch_name(contest, style, prioritize)
+        if contest:
+            self.imprimir(f"Created contest ({contest.get('uid')}) branch ({branch})", 4)
         # Get the current branch for reference
         current_branch = self.shell_out(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -378,6 +386,7 @@ class AcceptBallotOperation(Operation):
         self,
         a_ballot: dict,
         the_election_config: dict,
+        prioritize: bool = False,
     ):
         """Called only by main.  Loops over contests and performs the required git dance"""
 
@@ -405,7 +414,7 @@ class AcceptBallotOperation(Operation):
                     # atomically create the branch locally and remotely
                     branches.append(
                         self.checkout_new_branch(
-                            the_election_config, contest, "main", "contest"
+                            the_election_config, contest, "main", "contest", prioritize
                         )
                     )
                     # Add the cast_branch to the contest json payload
@@ -543,6 +552,7 @@ class AcceptBallotOperation(Operation):
         cast_ballot_json: dict = "",
         merge_contests: bool = False,
         version_receipts: bool = False,
+        prioritize: bool = False,
     ) -> tuple[list, int, str, str]:
         """
         Main function - see -h for more info.  Will work with either
@@ -615,6 +625,7 @@ class AcceptBallotOperation(Operation):
         ) = self.main_handle_contests(
             a_ballot=a_ballot,
             the_election_config=the_election_config,
+            prioritize=prioritize,
         )
 
         # Create the ballot check

@@ -57,9 +57,16 @@ Either the location of the ballot_file or the associated address is required.
         help="overrides an address - specifies a specific cast ballot",
     )
     parser.add_argument(
+        "-r",
         "--version_receipts",
         action="store_true",
         help="when set will capture and version the ballot receipts",
+    )
+    parser.add_argument(
+        "-p",
+        "--prioritize",
+        action="store_true",
+        help="when set the accepted ballot will be tabulated with priority",
     )
     Arguments.add_merge_contests(parser)
     Arguments.add_verbosity(parser)
@@ -93,6 +100,7 @@ def main():
         cast_ballot=parsed_args.cast_ballot,
         merge_contests=parsed_args.merge_contests,
         version_receipts=parsed_args.version_receipts,
+        prioritize=parsed_args.prioritize,
     )
 
 
