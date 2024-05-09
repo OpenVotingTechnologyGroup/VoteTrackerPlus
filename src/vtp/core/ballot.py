@@ -176,13 +176,14 @@ class Ballot:
                     f"{contest['contest_name']} (it can be empty)"
                 )
             # Validate the selection node
-            for pick in contest.get("selection"):
-                index, name = Contest.split_selection(pick)
+            # NOTE - contest here is NOT a Contest object - it is a plain dictionary
+            choices = Contest.get_choices_from_contest(contest.get("choices"))
+            for name in contest.get("selection"):
                 # Is the name one of the choices?
-                if not any(choice["name"] == name for choice in contest.get("choices")):
+                if name not in choices:
                     raise KeyError(
-                        f"the contest selection/vote index ({index}) and name ({name}) "
-                        f"does not match the choice name ({contest[1][index]['name']})"
+                        f"the contest selection name ({name}) "
+                        f"does not match any of the choices ({choices})"
                     )
             # Now remove the selection node (as the goal is a diff with
             # the associated blank ballot).

@@ -18,7 +18,6 @@
 """How to manage a VTP specific contest"""
 
 import json
-import re
 
 # local
 from .common import Globals
@@ -238,11 +237,11 @@ class Contest:
         """Will smartly return just the pure list of choices sans all
         values and sub dictionaries.  An individual choice can either
         be a simple string, a regulare 1D dictionary, or it turns out
-        a bool.
+        a bool.  Returns a copy!
         """
         # Returns a pure list of choices sans any other values or sub dictionaries
         if isinstance(choices[0], str):
-            return choices
+            return list(choices)
         if isinstance(choices[0], dict):
             return [entry["name"] for entry in choices]
         if isinstance(choices[0], bool):
@@ -250,28 +249,6 @@ class Contest:
         raise ValueError(
             f"unknown/unsupported contest choices data structure ({choices})"
         )
-
-    @staticmethod
-    def split_selection(selection: str):
-        """Will split the selection into (2) parts again."""
-        offset, name = re.split(r":\s+", selection, 1)
-        return int(offset), name
-
-    @staticmethod
-    def extract_offest_from_selection(selection: str):
-        """
-        Will extract the int selection choice from the verbose
-        selection string
-        """
-        return int(Contest.split_selection(selection)[0])
-
-    @staticmethod
-    def extract_name_from_selection(selection: str):
-        """
-        Will extract the name selection choice from the verbose
-        selection string
-        """
-        return Contest.split_selection(selection)[1]
 
     def __init__(
         self,
@@ -298,14 +275,22 @@ class Contest:
         }
         return json.dumps(contest_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def pretty_print_a_ticket(self, choice_index: int):
+    def pretty_print_a_ticket(self, choice: str):
         """Will pretty print a ticket"""
-        ticket = []
-        for ticket_index, name in enumerate(
-            self.contest["choices"][choice_index]["ticket_names"]
-        ):
-            ticket.append(f"{name} ({self.contest['ticket_titles'][ticket_index]})")
-        return "; ".join(ticket)
+        details = []
+        for choice_index, ticket in enumerate(self.contest["choices"]):
+            if ticket["name"] == choice:
+                for name_index, title in enumerate(self.contest["ticket_titles"]):
+                    # import pdb; pdb.set_trace()
+                    details.append(
+                        f"{title}: "
+                        f"{self.contest['choices'][choice_index]['ticket_names'][name_index]}"
+                    )
+                return f"{choice} ({'; '.join(details)})"
+        raise ValueError(
+            f"pretty_print_a_ticket: supplied choice {choice} does not match "
+            f"any of the possible choices ({self.get('choices')})"
+        )
 
     def get(self, thing: str):
         """
@@ -313,6 +298,9 @@ class Contest:
         'dict', will return an aggregated dictionary similar to when
         the object is printed.  If the parameter is 'contest', it
         returns the contest.
+
+        Note - get'ing the choices will return the choice 'name's regardless
+        of contest type.
 
         Note - 'contest' does NOT create/return a copy while 'dict'
         does not copy any deeper data structures.
@@ -332,13 +320,6 @@ class Contest:
         # Return contest 'meta' data
         if thing in ["cloak"]:
             return getattr(self, thing)
-        # Note - a 'selection' is a aggregated string of the selected
-        # offset and the 'name', which for a ticket based contest is
-        # not useful.  So support the extraction of just the offset.
-        if thing == "selection-offset":
-            return Contest.extract_offest_from_selection(
-                getattr(self, "contest")["selection"]
-            )
         # Else return contest data itself indexed by thing
         return getattr(self, "contest")[thing]
 
@@ -366,49 +347,49 @@ class Contest:
             return
         raise ValueError(f"Illegal value for Contest attribute ({thing})")
 
-    def get_selections_indices(self):
-        """Will return the ordered list of index numbers for the selection array"""
-        indexes = []
-        if "selection" in self.contest:
-            for sel in self.contest["selection"]:
-                indexes.append(Contest.extract_offest_from_selection(sel))
-        return indexes
-
-    def add_selection(self, selection_offset: int):
-        """Will add the specified contest choice, the offset into the ordered
-        choices array, to the specified contest.  This is an
-        'add' since in plurality one may be voting for more than one
-        choice, or in RCV one needs to rank the choices.  In both the
-        order is the rank but in plurality rank does not matter.
+    def add_selection(self, selection: str = "", offset: int = -1):
+        """Will add the specified contest choice as defined by the
+        unique name string.  This is an 'add' since in plurality one
+        may be voting for more than one choice, or in RCV one needs to
+        rank the choices.  In both the order is the rank but in
+        plurality rank does not matter.
         """
+        choices = Contest.get_choices_from_contest(self.contest["choices"])
         # Some minimal sanity checking
-        if selection_offset > len(self.contest["choices"]):
+        if offset != -1 and selection != "":
+            raise ValueError("add_selection: cannot specify both selection and offset")
+        if offset == -1 and selection == "":
+            raise ValueError("add_selection: no selection or offset was supplied")
+        if offset != -1:
+            if offset > len(choices):
+                raise ValueError(
+                    f"The choice offset ({offset}) is greater "
+                    f"than the number of choices ({len(choices)})"
+                )
+            if offset < 0:
+                raise ValueError(f"Only positive offsets are supported ({offset})")
+            selection = choices[offset]
+        if selection not in choices:
             raise ValueError(
-                f"The choice offset ({selection_offset}) is greater "
-                f"than the number of choices ({len(self.contest['choices'])})"
-            )
-        if selection_offset < 0:
-            raise ValueError(
-                f"Only positive offsets are supported ({selection_offset})"
+                f"The specified selection ({selection}) is not one of "
+                f"the available/legitimate choices: {choices}"
             )
         if "selection" not in self.contest:
-            self.contest["selection"] = []
-        elif selection_offset in self.get_selections_indices():
+            self.contest["selection"] = [selection]
+            return
+        if selection in self.contest["selection"]:
             raise ValueError(
                 (
-                    f"The selection ({selection_offset}) has already been "
+                    f"The selection ({selection}) has already been "
                     f"selected for contest ({self.contest['contest_name']}) "
                     f"for GGO ({self.contest['ggo']})"
                 )
             )
-        # For end voter UX, add the selection as the offset + ': ' +
-        # name just because a string is more understandable than json
-        # list syntax
-        self.contest["selection"].append(
-            str(selection_offset)
-            + ": "
-            + self.contest["choices"][selection_offset]["name"]
-        )
+        # Note - prior to 2024/05/09, the selection was an offset + " : "
+        # + "name".  That was inherently a bad idea.  It also resulted in
+        # confusion of what the offset was.  So as of now, just use the
+        # unique name of the contest.
+        self.contest["selection"].append(selection)
 
 
 # EOF

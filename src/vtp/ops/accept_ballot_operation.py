@@ -121,7 +121,9 @@ class AcceptBallotOperation(Operation):
         # and attempt at a new unique branch
         branch = self.new_branch_name(contest, style, prioritize)
         if contest:
-            self.imprimir(f"Created contest ({contest.get('uid')}) branch ({branch})", 4)
+            self.imprimir(
+                f"Created contest ({contest.get('uid')}) branch ({branch}):", 4
+            )
         # Get the current branch for reference
         current_branch = self.shell_out(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"],
@@ -440,6 +442,7 @@ class AcceptBallotOperation(Operation):
                     contest_receipts[uid] = self.contest_add_and_commit(
                         branches[-1], "contest"
                     )
+                    self.imprimir(f"- {contest_receipts[uid]}", 4)
                     # if cloaking, get those as well
                     if "cloak" in contest.get("contest"):
                         cloak_receipts[uid] = self.get_cloaked_contests(contest, "main")

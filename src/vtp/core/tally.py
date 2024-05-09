@@ -123,19 +123,6 @@ class Tally:
         }
         return json.dumps(tally_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
-    def select_name_from_choices(self, selection: str):
-        """Will smartly return just the pure selection name sans all
-        values and sub dictionaries from a round
-        """
-        pick = self.contest["choices"][Contest.extract_offest_from_selection(selection)]
-        if isinstance(pick, str):
-            return pick
-        if isinstance(pick, dict):
-            return pick["name"]
-        if isinstance(pick, bool):
-            return "True" if pick else "False"
-        raise ValueError(f"unknown/unsupported contest choices data structure ({pick})")
-
     def tally_a_plurality_contest(
         self,
         contest: dict,
@@ -151,8 +138,6 @@ class Tally:
                 # values
                 selection = contest["selection"][count]
                 # depending on version, selection could be an int or a string
-                if isinstance(selection, str):
-                    selection = Contest.extract_offest_from_selection(selection)
                 choice = Contest.get_choices_from_contest(contest["choices"])[selection]
                 self.selection_counts[choice] += 1
                 self.vote_count += 1
@@ -179,8 +164,6 @@ class Tally:
             # the voter can still leave a RCV contest blank
             selection = contest["selection"][0]
             # depending on version, selection could be an int or a string
-            if isinstance(selection, str):
-                selection = Contest.extract_offest_from_selection(selection)
             choice = Contest.get_choices_from_contest(contest["choices"])[selection]
             self.selection_counts[choice] += 1
             self.vote_count += 1
@@ -247,7 +230,7 @@ class Tally:
         a_copy = contest["selection"].copy()
         for selection in a_copy:
             if (
-                self.select_name_from_choices(selection) in self.obe_choices
+                contest["selection"][0] in self.obe_choices
                 and selection in contest["selection"]
             ):
                 contest["selection"].remove(selection)
@@ -382,6 +365,8 @@ class Tally:
             contest = uid["contestCVR"]
             digest = uid["digest"]
             if digest in checks:
+                # Note - to manually inspect a specific RCV vote,
+                # add the 'if digest == "...": import pdb; pdb.set_trace()' here
                 self.operation_self.imprimir(
                     f"INSPECTING: {digest} (contest={contest['contest_name']}) "
                     f"as vote {vote_count + 1}",
@@ -394,11 +379,7 @@ class Tally:
                 # Note - as the rounds go by, the
                 # contest["selection"]'s will get trimmed to an empty
                 # list.  Once empty, the vote/voter is done.
-                if (
-                    contest["selection"]
-                    and self.select_name_from_choices(contest["selection"][0])
-                    == last_place_name
-                ):
+                if contest["selection"] and contest["selection"][0] == last_place_name:
                     # Safely pop the current first choice and reset
                     # contest['selection'].  Note that
                     # self.obe_choices has _already_ been updated with
@@ -413,15 +394,12 @@ class Tally:
                         # The voter can still leave a RCV contest blank
                         # Note - selection is the new selection for this contest
                         new_selection = contest["selection"][0]
-                        # Select from self.contest['choices'] as that is the
-                        # set-in-stone ordering w.r.t. selection
-                        new_choice_name = self.select_name_from_choices(new_selection)
-                        self.selection_counts[new_choice_name] += 1
+                        self.selection_counts[new_selection] += 1
                         # original variant: if digest in checks or loglevel == "DEBUG":
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
                                 f"RCV: {digest} (contest={contest['contest_name']}) last place "
-                                f"pop and count ({last_place_name} -> {new_choice_name})",
+                                f"pop and count ({last_place_name} -> {new_selection})",
                                 0,
                             )
                     else:
