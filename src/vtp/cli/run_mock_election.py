@@ -105,6 +105,12 @@ mock to a single ballot N times.
         default=0,
         help="if supplied, will run for that number of minutes - overrides iterations",
     )
+    parser.add_argument(
+        "-r",
+        "--version_receipts",
+        action="store_true",
+        help="when set will capture and version the ballot receipts (scanner only)",
+    )
     Arguments.add_verbosity(parser)
     Arguments.add_printonly(parser)
     parsed_args = parser.parse_args()
@@ -152,6 +158,7 @@ def main():
         flush_mode=parsed_args.flush_mode,
         iterations=parsed_args.iterations,
         duration=parsed_args.duration,
+        version_receipts=parsed_args.version_receipts,
     )
 
 

@@ -59,6 +59,7 @@ class RunMockElectionOperation(Operation):
         flush_mode: int,
         minimum_cast_cache: int,
         duration: int,
+        version_receipts: bool,
     ):
         """Simulate a VTP scanner"""
 
@@ -122,6 +123,7 @@ class RunMockElectionOperation(Operation):
                 )
                 accept_ballot.run(
                     cast_ballot=Ballot.get_cast_from_blank(blank_ballot),
+                    version_receipts=version_receipts,
                 )
                 if device == "both":
                     # - merge the ballot's contests
@@ -284,6 +286,7 @@ class RunMockElectionOperation(Operation):
         flush_mode: int = 0,
         iterations: int = 10,
         duration: int = 0,
+        version_receipts: bool = False,
     ):
         """Main function - see -h for more info
 
@@ -325,6 +328,7 @@ class RunMockElectionOperation(Operation):
                 flush_mode=flush_mode,
                 minimum_cast_cache=minimum_cast_cache,
                 duration=duration,
+                version_receipts=version_receipts,
             )
         elif device == "tabulator":
             self.tabulator_mockup(

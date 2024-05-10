@@ -208,9 +208,9 @@ class MergeContestsOperation(Operation):
         while loop:
             # If there are any prioritized branches, pick them first
             pick = -1
-            for count, branch in enumerate(batch):
+            for ecount, branch in enumerate(batch):
                 if prioritize_pattern.search(branch):
-                    pick = count
+                    pick = ecount
                     break
             if pick == -1:
                 pick = random.randrange(len(batch))
