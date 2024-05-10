@@ -65,18 +65,16 @@ $ pipx install poetry
 
 ### 4.2) Clone a mock election repo and this repo
 
-The VotetrackerPlus repo is typically included as a submodule, and that is the case with the [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) repo.  Clone that repo enabling submodules:
-
-```bash
-$ mkdir vtp.repos && cd vtp.repos
-$ git clone --recurse-submodules git@github.com:TrustTheVote-Project/VTP-dev-env.git
-```
-
-Each VTP ElectionData repository, mock or otherwise, represents a different election.  An election data repo may be already configured, or may be of a past election, or may be a test/mock election.  The VTP-mock-election.US.10 election data repo is a test/mock election.
+The VotetrackerPlus repo is typically included as a submodule from the git [VTP-dev-env](https://github.com/TrustTheVote-Project/VoteTrackerPlus) super project.  See that [README](https://github.com/TrustTheVote-Project/VoteTrackerPlus) for cloning the VTP repositoriers including this VotetrackerPlus repo.
 
 ### 4.3) Create a python environment in which to run VTP
 
 See [_tools/build/README.md](../../_tools/build/README.md) for directions of how to set up a python environment and perform a local install so that the VoteTrackerPlus scripts contained in the repo can properly when the python environment is activated.
+
+```bash
+$ make poetry-link
+$ poetry install
+```
 
 ### 4.4) Activate the python environment
 
@@ -88,11 +86,19 @@ $ poetry shell
 
 ### 4.5) Odds and Ends
 
-As VoteTrackerPlus leverages git, one must have a git "user.name" and "user.email" defined somewhere.  One way to accomplish this is the following:
+1) As VoteTrackerPlus leverages git, one must have a git "user.name" and "user.email" defined somewhere.  One way to accomplish this is the following:
 
 ```bash
 $ git config --global user.email "you@example.com"
 $ git config --global user.name "your name"
+```
+
+2) Currently all VTP repositories required signed commits.  If you intend on pushing commits, you will need to create [GitHub gpg keys](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
+
+3) Initially, a new mock election (an ElectionData repo) may not contain anything.  If is it copied from a previous one, it probably will have an election already configured (config.yaml files will be present and configured).  However, an ElectionData repo will normally also need all the blank ballots across the election (across all precincts etc) to also be committed.  All the VTP blank ballots can be created by:
+
+```bash
+$ generate-all-blank-ballots -e ../VTP-mock-election.US.16
 ```
 
 ### 4.6) Running a mock election
@@ -120,7 +126,7 @@ The resulting directory tree looks like this:
 ├── guid-client-store
 ├── mock-clients
 │   ├── scanner.00
-│   │   └── VTP-mock-election.US.16
+│   │   └── VTP-mock-election.US.17
 │   │       ├── GGOs
 │   │       │   └── states
 │   │       │       └── Massachusetts
@@ -132,7 +138,17 @@ The resulting directory tree looks like this:
 │   │       │           │       └── Concord
 │   │       │           │           ├── CVRs
 │   │       │           │           │   └── contest.json
+│   │       │           │           ├── GGOs
+│   │       │           │           │   └── precincts
+│   │       │           │           │       ├── 1
+│   │       │           │           │       │   └── config.yaml
+│   │       │           │           │       └── 2
+│   │       │           │           │           └── config.yaml
 │   │       │           │           ├── address_map.yaml
+│   │       │           │           ├── blank-ballots
+│   │       │           │           │   └── json
+│   │       │           │           │       ├── 000,001,002,003,004,ballot.json
+│   │       │           │           │       └── 000,001,002,003,005,ballot.json
 │   │       │           │           └── config.yaml
 │   │       │           └── config.yaml
 │   │       ├── LICENSE
