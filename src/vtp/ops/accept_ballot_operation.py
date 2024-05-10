@@ -646,6 +646,7 @@ class AcceptBallotOperation(Operation):
         else:
             receipt_branch = None
             qr_img = None
+            receipt_digest = None
 
         # Optionally merge the branches now and avoid calling
         # merge-contests later. Note - this will serialize the ballots

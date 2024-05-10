@@ -92,7 +92,7 @@ class Globals:
         # The subdirectory where the FastAPI connection git workspaces are stored
         "GUID_CLIENT_DIRNAME": "guid-client-store",
         # The subdirectory where the local tabulation git workspace is stored
-        "TABULATION_SERVER_DIRNAME": "tabulation-server",
+        "TABULATION_SERVER_DIRNAME": "local-upstream",
         # The subdirectory where the mock scanner git workspaces are stored
         "MOCK_CLIENT_DIRNAME": "mock-clients",
         # Default runtime location of everything

@@ -194,7 +194,7 @@ class RunMockElectionOperation(Operation):
             incoming_printlevel=4,
         )
 
-    def server_mockup(
+    def tabulator_mockup(
         self,
         the_election_config: ElectionConfig,
         flush_mode: int,
@@ -202,9 +202,9 @@ class RunMockElectionOperation(Operation):
         minimum_cast_cache: int,
         iterations: int,
     ):
-        """Simulate a VTP server"""
-        # This is the VTP server simulation code.  In this case, the VTP
-        # scanners are pushing to an ElectionData remote and this (server)
+        """Simulate a VTP tabulator"""
+        # This is the VTP tabulator simulation code.  In this case, the VTP
+        # scanners are pushing to an ElectionData remote and this (tabulator)
         # needs to pull from the ElectionData remote.  And, in this case
         # the branches to be merged are remote and not local.
         start_time = time.time()
@@ -288,7 +288,7 @@ class RunMockElectionOperation(Operation):
         """Main function - see -h for more info
 
         Note - this is a serial synchronous mock election loop.  A
-        parallel loop would have one VTP server git workspace somewhere
+        parallel loop would have one VTP tabulator git workspace somewhere
         and N VTP scanner workspaces someplace else.  Depending on the
         network topology, it is also possible to start up VTP scanner
         workspaces on other machines as long as the git remotes and clones
@@ -326,8 +326,8 @@ class RunMockElectionOperation(Operation):
                 minimum_cast_cache=minimum_cast_cache,
                 duration=duration,
             )
-        elif device == "server":
-            self.server_mockup(
+        elif device == "tabulator":
+            self.tabulator_mockup(
                 the_election_config=the_election_config,
                 flush_mode=flush_mode,
                 duration=duration,

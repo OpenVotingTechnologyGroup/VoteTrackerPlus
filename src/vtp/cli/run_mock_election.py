@@ -49,14 +49,14 @@ configured).
 When "-d scanner" is supplied, run_mock_election.py will randomly
 cast and scan ballots.
 
-When "-d server" is supplied, run_mock_election.py will
+When "-d tabulator" is supplied, run_mock_election.py will
 synchronously run the merge_contests.py program which will once
 every 10 seconds.  Note that nominally 100 contgests need to have
 been pushed for merge_contests.py to merge in a contest into the
 main branch without the --flush_mode option.
 
 If "-d both" is supplied, run_mock_election.py will run a single
-scanner N iterations while also calling the server function.  If
+scanner N iterations while also calling the tabulator function.  If
 --flush_mode is set to 1 or 2, run_mock_election.py will then
 flush the ballot cache before printing the tallies and exiting.
 
@@ -74,7 +74,7 @@ mock to a single ballot N times.
         "-d",
         "--device",
         default="",
-        help="specify a specific VC local device (scanner or server or both) to mock",
+        help="specify a specific VC local device (scanner or tabulator or both) to mock",
     )
     Arguments.add_minimum_cast_cache(parser)
     # Note - the black formatter will by default break the help
@@ -110,9 +110,9 @@ mock to a single ballot N times.
     parsed_args = parser.parse_args()
 
     # Validate required args
-    if parsed_args.device not in ["scanner", "server", "both"]:
+    if parsed_args.device not in ["scanner", "tabulator", "both"]:
         raise ValueError(
-            "The --device parameter only accepts 'device' or 'server' "
+            "The --device parameter only accepts 'device' or 'tabulator' "
             f"or 'both' - ({parsed_args.device}) was suppllied."
         )
     if parsed_args.flush_mode not in [0, 1, 2]:
