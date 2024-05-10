@@ -137,18 +137,16 @@ class Tally:
                 # be interested in verifying the explicit
                 # values
                 selection = contest["selection"][count]
-                # depending on version, selection could be an int or a string
-                choice = Contest.get_choices_from_contest(contest["choices"])[selection]
-                self.selection_counts[choice] += 1
+                self.selection_counts[selection] += 1
                 self.vote_count += 1
                 if provenance_digest:
                     self.operation_self.imprimir(
-                        f"Counted {provenance_digest} as vote {vote_count}: choice={choice}",
+                        f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
                         0,
                     )
                 elif self.operation_self.verbosity == 5:
                     self.operation_self.imprimir(
-                        f"counted {digest} as vote {vote_count}: choice={choice}"
+                        f"counted {digest} as vote {vote_count}: selection={selection}"
                     )
             else:
                 if provenance_digest:
@@ -156,20 +154,27 @@ class Tally:
                         f"No-vote {provenance_digest}: BLANK", 0
                     )
 
+    # ZZZ delete this
+    # def prune_this(self, selection: str):
+    #     offset, name = re.split(r":\s+", selection, 1)
+    #     if offset and name and offset.isdigit():
+    #         return name
+    #     return selection
+    # ZZZ
+
     def tally_a_rcv_contest(
         self, contest: dict, provenance_digest: str, vote_count: int
     ):
         """RCV tally"""
         if len(contest["selection"]):
-            # the voter can still leave a RCV contest blank
+            # Note - the voter can still leave a RCV contest blank
+            # Get the first selection ([0])
             selection = contest["selection"][0]
-            # depending on version, selection could be an int or a string
-            choice = Contest.get_choices_from_contest(contest["choices"])[selection]
-            self.selection_counts[choice] += 1
+            self.selection_counts[selection] += 1
             self.vote_count += 1
             if provenance_digest:
                 self.operation_self.imprimir(
-                    f"Counted {provenance_digest} as vote {vote_count}: choice={choice}",
+                    f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
                     0,
                 )
         else:
