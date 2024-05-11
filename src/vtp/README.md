@@ -101,6 +101,34 @@ $ git config --global user.name "your name"
 $ generate-all-blank-ballots -e ../VTP-mock-election.US.16
 ```
 
+4) When creating a fresh mock election repo from scratch, follow the normal steps for creating a demo.  This will create the /opt/VotetrackerPlus/demo.01 tree.  Note - the repos will not yet contain any cast ballots.  To populate the mock repo, runs a few scanners and a tabulator to merge in a few hundred randomly cast ballots to main while leaving 100 unmerged for interactive demo purposes:
+
+- Run a few scanners with -i set to 100 or more to generate that many per contest CVRs
+
+```bash
+# each of the following in a different window and different workspace at the same time
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.00/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.01/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.02/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+# 25 tabulator iterations should be enough on most systems
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/server/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d tabulator -i 25 -v4
+```
+
+- At the same time run a tabulator in another window/workspace (the tabulator workspace for example)
+- When all is completed and all cast ballots minus 100 (the default offset) are merged to main, push everything to the non local upstream:
+
+```bash
+$ cd /opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git
+$ git push origin --all
+```
+
 ### 4.6) Running a mock election
 
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
