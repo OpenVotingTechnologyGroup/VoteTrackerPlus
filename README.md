@@ -1,12 +1,14 @@
 # VoteTracker+
 
-[![CodeQL](https://github.com/TrustTheVote-Project/VoteTrackerPlus/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/TrustTheVote-Project/VoteTrackerPlus/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml)
 
-VoteTracker+ (VTP or VoteTrackerPlus) is a 100% open software vote tracking system that increases the security, accuracy, and trustworthiness of paper ballot based elections by cryptographically and anonymously tracking the votes associated with paper ballots, supplying real [E2EV][E2EV.md] for voters and election officials.  VTP is a software only product comprised of backoffice plugins with voter and election official facing frontoffice components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
+VoteTracker+ (a.k.a. VTP & VoteTrackerPlus) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  All types of elections are supported: traditional in-person paper based, mail-in, absentee, internet voting (iVoting) with paper or without.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
 
-Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo on your own Apple or Linux desktop.
+VTP cryptographically and anonymously tracks the per contest votes, supplying real [E2EV][E2EV.md] for voters and election officials.  VTP is a software only product comprised of backoffice plugins with voter and election official frontend facing components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
 
-To run your own [CLI](https://en.wikipedia.org/wiki/Command-line_interface) based demo, see the [VTP-dev-env git repo](https://github.com/TrustTheVote-Project/VTP-dev-env).  That repo includes this repo and the latest mock election repo as git submodules.  That repo also includes a Makefile with the necessary commands to clone everything and run a mock VTP election, including manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP ballot server.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.  Note - the live demo actually includes a complete election, from limited JSON _data only_ blank ballots (no description, language, or printing) to full tallies of the contests.
+Read the [pitch](docs/pitch.md), ask for a live demo, or run your own live demo.  The demo consists of separate python uvicorn web and tabulator servers running on Linux or MacOS, the web server providing a iVoting experience for any LAN/WAN connected devices.  End voters can vote a demo ballot containing 4 plurality and one RCV contest.  As it being a demo, with the tabulation server running voters can tally the election at any time and verify that their ballot has been cast and tallied as intended, all within a single demo experience.
+
+See the [VTP-dev-env git repo](https://github.com/OpenVotingTechnologyGroup/VTP-dev-env) for overall project level information.  That repo includes this repo and the latest mock election repo as git submodules.  That repo also includes a Makefile with the necessary commands to clone everything and run a mock VTP election, including manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP tabulator.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.
 
 ## 1) Overview
 
@@ -32,14 +34,14 @@ VoteTracker+ is NOT a:
 
 * voter ID solution
 * voter registration solution
-* ballot scanner nor contains ballot scanning software - VoteTracker+ receives the interpreted ballot from the ballot scanner, which could be a traditional mechanical scanner, smart phone application, or manually from an election official
+* ballot scanner nor contains ballot scanning software - VoteTracker+ receives the interpreted ballot from the ballot scanner, or in the case of iVoting, from the VTP web interface itself
 * replacement for paper ballots - VoteTracker+ requires the balloting process to start and end with a paper ballot
 
 ## 2) 10,000 Foot Overview
 
 The VTP root repo (this repo) is meant to be directly integrated via a git submodule with a VTP ElectionData directory tree which is comprised of one or more git submodules (though as of this writing and stage of agile software development, an OS level symbolic-link is typically used instead).  An VTP ElectionData tree is a directory tree that _componentizes_ the backend election configuration data into separate GGOs (Geopolitical Geographical Overlays - NIST calls this a [geopolitical unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)).  Each GGO can have is its own [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) authority or share another GGO's RBAC.  Independent of the GGO components the ElectionData tree supports arbitrary git submodule componentization which ultimately allows a [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center) to operate completely disconnected from an external computer network.
 
-A sample mock ElectionData repo can be found at [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10).
+A sample mock ElectionData repo can be found at [VTP-mock-election.US.10](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.US.10).
 
 A diagram representing the high level in-person voter experience is located [here](https://drive.google.com/file/d/1-vKSE89R6DGvIs2JduyOt1AojmEXongL/view?usp=sharing) (Google Drive).
 
@@ -89,7 +91,7 @@ VoteTracker+ is currently in the early design phase with a downloadable CLI demo
 
 Crowdfunding is also possible - a preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A)
 
-VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/TrustTheVote-Project/projects/2/views/1).  The project pages are currently private - get involved or join the team to gain access to it.  :-)
+VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/OpenVotingTechnologyGroup/projects/1/views/1).  The project pages are currently private - get involved or join the team to gain access to it.  :-)
 
 [Cast Vote Record]: https://pages.nist.gov/ElectionGlossary/#cast-vote-record
 [E2EV.md]: docs/E2EV.md

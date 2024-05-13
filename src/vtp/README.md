@@ -24,7 +24,7 @@ In summary, to create a VTP election configuration is to create these yaml files
 
 ## 2) Background and Caveats
 
-The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this repository, a web-api repository containing a FastAPI restful interface, and a html/css/javascript client browser front end.  See the [VTP-dev-env](https://github.com/TrustTheVote-Project/VTP-dev-env) repo for more info.
+The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this repository, a web-api repository containing a FastAPI restful interface, and a html/css/javascript client browser front end.  See the [VTP-dev-env](https://github.com/OpenVotingTechnologyGroup/VTP-dev-env) repo for more info.
 
 It is important that the end-voter usage model be as simple as possible and as immune as possible to false narratives and conspiracy theories.  A primary goal of VoteTracker+ is election and ballot trustworthiness.  As such a design goal of VoteTracker+ is that this git repo along with the various git submodules will comprise a specific election, statically, both in terms of code __and__ election configuration data (a.k.a. the ElectionData)  __including__ all the [Cast Vote Records][Cast Vote Record].
 
@@ -32,7 +32,7 @@ It is important that the end-voter usage model be as simple as possible and as i
 
 The VoteTracker+ development process is currently more or less the following:
 
-- Commits are required to be signed.  See [https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
+- Commits are required to be signed.  See [https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
 - Standard GitHub pull request (PR) development models are in play
 - All pull-requests are squashed-merged onto main - main maintains a linear history
 - All pull-requests pass isort, black, and pylint with a pylint score of 10.0
@@ -65,7 +65,7 @@ $ pipx install poetry
 
 ### 4.2) Clone a mock election repo and this repo
 
-The VotetrackerPlus repo is typically included as a submodule from the git [VTP-dev-env](https://github.com/TrustTheVote-Project/VoteTrackerPlus) super project.  See that [README](https://github.com/TrustTheVote-Project/VoteTrackerPlus) for cloning the VTP repositoriers including this VotetrackerPlus repo.
+The VotetrackerPlus repo is typically included as a submodule from the git [VTP-dev-env](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus) super project.  See that [README](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus) for cloning the VTP repositoriers including this VotetrackerPlus repo.
 
 ### 4.3) Create a python environment in which to run VTP
 
@@ -137,7 +137,7 @@ To run a mock election, run the setup_vtp_demo.py script (which per python's loc
 % setup-vtp-demo -e ../VTP-mock-election.US.16
 Running "git rev-parse --show-toplevel"
 Running "git config --get remote.origin.url"
-Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.16.git"
+Running "git clone --bare git@github.com:OpenVotingTechnologyGroup/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
