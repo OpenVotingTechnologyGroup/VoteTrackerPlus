@@ -1,4 +1,6 @@
-# An Informal Description of the Security Model of VoteTracker+
+# An Informal Description of the Security Model of VoteTrackerPlus
+
+__UNDER CONSTRUCTION__
 
 ## 1) Terminology
 
@@ -6,29 +8,48 @@ For definitions and technical terms, please refer to the [NIST Glossary](https:/
 
 ## 2) What does this page cover?
 
-This page describes a high-level summary of the security model, [cryptographic protocols](https://en.wikipedia.org/wiki/Cryptographic_protocol), and [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface) presented by VTP.  For ease of understanding, this information is divided five domains:
+This page describes a high-level summary of the security model, [cryptographic protocols](https://en.wikipedia.org/wiki/Cryptographic_protocol), [attack surfaces](https://en.wikipedia.org/wiki/Attack_surface), and [zero trust aspects](https://en.wikipedia.org/wiki/Zero_trust_security_model) of VTP.  For ease of understanding, this information is divided three domains:
 
-- Data-at-Rest domain
-- Data-Remote-Update domain
-- Data-Remote-Motion domain
-- Data-Local-Motion domain
-- Data-Local-Update domain
+1) Data-at-Rest
+2) Data-in-Motion-Local
+3) Data-in-Motion-Remote
 
-These domains are overlapping, which is not considered a bad thing since failing to consider a security aspect is worse then considering it multiple times from different points of view.  For example, to update the VoteTracker+ (VTP) repositories hosted by a VTP service somewhere, both Data-Remote-Update and Data-Remote-Motion security concerns and attack surfaces need to be considered.
+Since the planning as well as the execution of a public election occurs over many months, the above dichotomy is overlayed with four more or less chronological time slices:
+
+1) Election Data creation and deployment
+2) Pre-election day ballot distribution and potential early voting ballot scanning
+3) Election day activities
+4) Post election day activities
+
+There is a (Threat Model MindMap)[https://mm.tt/app/map/3063357845?t=DuNY3bTVbg] that might be of interest.
+
+The primary driver for the first three domains is due to VoteTrackerPlus's primary design tenet is that since both the recorded per contest CVRs and ballot receipts are already anonymous when they are added to the underlying Git Merkle Tree, there is no need or desire to encrypt the data at rest.  However, since the all the election data (software, election definition, cast contest CVRs etc) is also stored in the same underlying Git Merkle Tree, attack surface wise this results in the integrity of the Merkle Tree itself as a primary target and hence attack surface.
+
+Thus a major benefit as well as an attack surface of VTP is the data at rest itself, protected by the natural Git Merkle Tree.  Thus Data-at_rest is called out as the first domain of interest.
+
+The Data-in-Motion-Local domain refers to contest level CVRs and ballot receipts moving in the local polling location (call it LAN local motion, though actual VTP deployments may not have a LAN).  The polling location may support in-person voting or it may be an election official (and public watchers) only location.
+
+The Data-in-Motion-Remote domains refers to when the local Git repos are being transferred/pushed/pulled to/from the upstream remote or when upstream remote changes are being pulled down to the polling location.  This includes updating git submodule references.
+
+A primary driver for the second four time partitions of a election is due to VoteTrackerPlus's primary design that all the software and blank ballot definitions are also part of the underlying Git Merkle Tree.  As such, as the election is defined, deployed, and tested, VoteTrackerPlus brings modern (software development processes)[https://en.wikipedia.org/wiki/Software_development_process] to this pre election day time period by incorporating modern (agile project management)[https://en.wikipedia.org/wiki/Agile_software_development] and (DecSecOps automation)[https://en.wikipedia.org/wiki/DevOps#DevSecOps,_shifting_security_left].
 
 ## 3) What does this page not cover?
 
-Lots.  This page is a selective slice of the VTP workflows from a security and cryptographic point of view, covering the general high level security models, cryptographic protocols, and attack surfaces.  Other pages describe the various technologies, workflow descriptions, and User eXperiences that comprise VTP.
+Lots.  This page is just an overview of VTP workflows from a security point of view.  In addition, election officials in different precincts will chose different VTP deployment models with different election equipment.  Such choices will directly effect the scope of various attack surfaces.  For example, one precinct may decide to have one VTP tabulator per polling center while another may wish to place a VTP tabulator in each ballot scanner while yet another may simply use dedicated touch screens resulting in effectively one VTP scanner and one VTP tabulator.
+
+Also, election officials can decide how to push and pull VTP data to/from the remote.  The push'es and pulls could occur by sneaker, wire, or radio frequencies.
+
+Note - regardless of mode the data should always be encrypted and follow solid industrial/military grade encryption standards regarding data movement.
 
 ## 4) VTP is not introducing a new cryptographic protocol
 
-VTP is not introducing a new cryptographic protocol, such as for example [ElectionGuard](https://www.electionguard.vote/) introducing homomorphic encryption.  New cryptographic protocols need not to be designed, vetted, and built.  VTP leverages already in-play and existing cryptographic protocols for all five security domains.  On the other hand VTP does add at the VTP application level, which is on top of third-party applications that are built on already vetted cryptographic protocols such as [PKI](https://en.wikipedia.org/wiki/Public_key_infrastructure) and [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy), additional security features such as [2FA](https://en.wikipedia.org/wiki/Multi-factor_authentication) as a way to increase tamper-resistance and to add greater resistance to accidental corruption and adversarial attacks.
+VTP is __not__ introducing a new cryptographic protocol, such as for example [ElectionGuard](https://www.electionguard.vote/) by introducing homomorphic encryption.  New cryptographic protocols need not to be designed, vetted, and built.  VTP leverages already in-play and existing cryptographic protocols for all three security domains across all four time slices, such as [PKI](https://en.wikipedia.org/wiki/Public_key_infrastructure) and [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy), additional security features such as [2FA](https://en.wikipedia.org/wiki/Multi-factor_authentication) as a way to increase tamper-resistance and to add greater resistance to accidental corruption and adversarial attacks.
 
-However, one aspect of VTP is that an 8"x11" sheet of standard printer paper is printed with 100 (TBD) rows of [cast vote record](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) digests of which 99 are randomly selected from random ballots.  VTP also records the cast vote records into the Git based [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) in random order.  Both instances of this randomization neet to be cryptographically vetted.
+However, one aspect of VTP that is new and does require security review is that the ballot receipt containing 100 contest level [cast vote record](https://pages.nist.gov/ElectionGlossary/#cast-vote-record) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) digests, whether it is printed on paper at in-person voting scenarios or returned to the user's smart device in internet based voting scenarios.  The ballot receipt contains 99 randomly selected contest CVR's from other ballots.  VTP also records the cast vote records into the Git based [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) in random order.  Both instances of this randomization neet to be cryptographically vetted by cryptographic and security experts.
 
-Note that there are no private keys associate with the public keys printed on the ballot acknowledgement nor contained throughout the VTP ballot and voter_ID repositories.  The only private keys contained or active in a VTP election are those public and private keys employed to set TLS connections and PGP and additional 2FA channels.  There are also private keys used to create and manage the CA chain used to administer an election as well as those to manage and operate the GitHub VTP servers, etc.
+Note that there are no private keys associate with the public digests contained in the ballot receipt.  The only private keys contained or active in a VTP election are those public and private keys employed to secure the data in motion and to secure the running of the election itself.  The former are used for TLS communication and the latter are used to prevent insertion of fraudulent ballots and CVRs as each election has it's own CA/ICA trust store and private/public keys.
 
-## 5) The VTP Attack Surface - a Decomposition into Five Domains
+## 5) The VTP Attack Surfaces - a Decomposition into Three Spatial Domains
 
 ### 5a) Data-at-Rest
 
@@ -36,9 +57,9 @@ VTP leverages [Git](https://git-scm.com/) as the [Merkle Tree](https://en.wikipe
 
 At rest, the git repositories are protected from tampering both via the nature of the SHA-256 Merkle Tree as well as the git hosting service protecting the git repositories at rest.  Since the repositories are publicly available, each voter can have their own complete copy as well and independently secure their clone as desired.  Note that VTP repositories contain both the VTP software apps source, such as those used to tally the ballots for the specific associated election as well as the cast vote records for that election.  All VTP software programs are written in Python as source code and include all testing and CI/CD pipeline infrastructure code as well such that every voter can inspect, test, and comment on all aspects of the VTP programs.
 
-### 5b) Data-Remote-Update
+### 5b) Data-in-Motion-Remote
 
-Data-Remote-Update refers to that part of the attack surface in play when someone is either legitimately trying to update a remote VTP repo or when VTP is being independently attacked via false update attempts.
+Data-in-Motion-Remote refers to that part of the attack surface in play when someone is either legitimately trying to update/download a remote VTP repo or when VTP is being independently attacked via false update attempts.
 
 #### Prior to ballots being scanned
 
@@ -68,7 +89,6 @@ Independent of the continued scanning of yet-to-be scanned ballots, once all the
 
 Note that in this manner, every member of the electorate is on equal footing with election officials.
 
-
 #### Post Ballot Scanning and Cast Vote Record Creation
 
 After all the polls close, the VTP repos for the election can be made publicly available.  Voters can continually update their clones as the queues of un-scanned, un-pushed cast vote records are pushed.  Each voter and each election official can tally the votes on their devices as well as inspecting the voter id repos.  The voter id repos are separate repos that solely contain the voter names and addresses and no other data.  This allows all voters to search for local and non local fraudulent voter names or addresses.
@@ -81,9 +101,9 @@ If fraudulent cast vote records are found, they can be revoked in a similar mann
 
 Note that since every cast vote records nominally has a voter behind it, a voter will know when their cast vote record is revoked.  This would theoretically enable a counter legal challenge to be brought if the voter so chose.
 
-### 5c) Data-Remote-Motion
+### In the General Case
 
-This section primarily covers security of when there is data in motion from one spot on the planet / internet to another, for example when a local voting center with its local VTP repo goes to push there repo to the election root VTP server.
+This section primarily covers the general security of when there is data in motion from one spot on the planet / internet to another, for example when a local voting center with its local VTP repo goes to push their repo(s) to the election root VTP server.
 
 At the https layer, all election official connections will employ [mutual authentication](https://en.wikipedia.org/wiki/Mutual_authentication) ssl leveraging a root certificate authority chain created and managed by the root level parent GGO running the election.  Note - the CI pipeline testing of this operational part of VTP will include cert revocation - all end points in the operational footprint of a VTP election must be able to adequately and properly handle cert revocation and new/renew cert allocation.  The CI test plan includes this type of adversarial attack.
 
@@ -91,7 +111,7 @@ On top of this military/industrial grade https/ssl layer will reside the GitHub 
 
 Regarding reading/cloning repositories from the VTP Git service, there will be a mirror of the actual live repos to several different git service end-points.  This will allow the voters at large as well as election officials who only need to read/clone the VTP repos to access services built to handle the traffic (perhaps many millions of connections per second) as well as the adversarial assaults on large capacity servers without effecting the uploading of commits to the real root servers.  The real VTP upstream servers will be hardened in a manner consistent with limited read/write access and hidden to extent possible from the internet at large.
 
-### 5d) Data-Local-Motion
+### 5c) Data-in-Motion-Local
 
 Data in local motion refers to the security models and attack surfaces in play within a specific LAN where either cast vote records are being created/processed or prior to the start of an election when the various GGO's are configuring VTP and the blank ballots as well as testing VTP in various test scenarios.
 
@@ -99,25 +119,10 @@ Prior to when the first ballots are scanned, the various VTP repos are undergoin
 
 Once a LAN at a voting center starts scanning / processing cast vote records, the LAN needs to be protected against run-time adversarial attacks at disrupting active voters.  This is no different then other non-VTP implementations.  Best practices should be used - wired connections if possible, WiFi encryption, etc.
 
-Note that the local voting center can go offline at ballot scanning time without issues.  This is because each local VTP repo is self contained regarding the creation and management of cast vote records.  In a worse case scenario, the cast ballots can be rescanned into VTP from scratch in bulk at a later time.  In this scenario depending on the local election budget, the voter sheets can be redistributed to the voters by having voters revisit a secure election voting center and having VTP print another voter sheet with the old digests mapped to the new digests.  In this workflow the voter DOES NOT reveal their private offset nor does the private offset change - VTP will look up the old digests with a map to the new digests of the new cast vote records.  In this case the first compromised VTP repos is not made public.
-
-### 5e) Data-Local-Update
-
-Data-Local-Update refers to the security and attack surfaces in play when at a local voting center ballots are being scanned into VTP.  This is the time and place where new [GUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) and SHA-256 Git digests are being generated.  The generation of both are completely local as the salt's for the GUIDs include the various private and public keys already shared between the local VTP submodule repo and the root parent VTP repo and git service.
+Ballot scanning and tabulating is the time and place where new [GUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier) and SHA-256 Git digests are being generated.  The generation of both are completely local as the salt's for the GUIDs include the various private and public keys already shared between the local VTP submodule repo and the root parent VTP repo and git service.
 
 At a high level, each ballot is separated into each [contest](https://pages.nist.gov/ElectionGlossary/#contest).  The voter's ballot will receive a different git commit for each contest.  The main purpose of this is to minimize the revelation of perhaps nefarious patterns to the multiple perhaps *uninteresting* contests on a ballot.  There is no way in VTP to re-assemble the individual ballot contests into the original single (paper) ballot with the sole exception being the private information returned to the voter - their specific row offset in their specific voter sheet.
 
 Once the voter has personally and privately blessed the cast vote record or decided to pass on that verification step entirely, the physical ballot is printed with a GUID that is both random and based on a unique local election repo private key as well as a root election private key passed from the root repo/organization to the local via a private key exchange.  An adversary will not be able to generate a valid GUID against the public election keys without these keys.
 
 This ballot GUID is also added to the digital scan of the ballot by the ballot scanning device.  This simply associates the physical ballot with the actual digital scan, both of which are never made public.  This association aids audits and recounts by limiting the ability to alter either the physical or digital scans in isolation.  Election officials control the physical ballot while the contractual agreement between the election officials and the ballot scanning hardware supplies determines the ownership of the actual ballot scans.
-
-Next a per contest GUID is generated and printed on the physical ballot and added to the JSON payload of the git commit for each contest.  The git commits are generated with an altered/zero'ed out date and time such that all dates and times are the same.  Each commit is in a different workspace and are not sequential in relationship.  The JSON payload does not contain the ballot GUID but only the specific contest GUID.
-
-The last approximately 200 (TBD - this number may be smaller or larger post more cryptographic analysis) ballots are also still in their respective individual workspaces having not yet been locally pushed.  Thus, there are 200 x the number of ballot contest workspace-only commits that have yet to be pushed to the local VTP repo.
-
-Next, the voter's VTP sheet is printed.  A random row is selected to be the voters specific ballot, and that row is filled with the voter's true git commits.  The other 99 rows are randomly selected from the 200 un-pushed workspaces and printed to fill the sheet.  Each ballot contest is randomly selected so that there is no association of ballot questions back to a single specific ballot.  Finally the sheet is printed and the voter's row is privately revealed on a small display to the voter.  The passing back of the voter's row on the sheet is done in private manner limiting the ability of the voter to prove to a third party that they voted in a specific manner.
-
-Then a random set of per contest commits across a random set of the un-pushed workspaces are pushed via a merge to the local git repo, returning the number of un-pushed workspaces so-to-speak to 200.  In this manner as ballots are scanned and cast vote records are created, they are sequentially pushed the local remote randomly both in actual ballot order and in contest order.
-
-After all the polls close, the last remaining 200 un-pushed cast voter records are pushed again in a random order.
-
