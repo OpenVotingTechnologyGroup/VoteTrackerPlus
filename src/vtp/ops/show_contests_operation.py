@@ -144,6 +144,7 @@ class ShowContestsOperation(Operation):
         # get the contents of the file via the commit digest.
         # This appears to require two git commands TBD
         receipt_digest = valid_digests[0]
+        ballot_check = None
         with self.changed_cwd(the_election_config.get("git_rootdir")):
             # get the filename
             output_lines = (

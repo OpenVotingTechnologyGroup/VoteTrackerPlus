@@ -24,7 +24,7 @@ In summary, to create a VTP election configuration is to create these yaml files
 
 ## 2) Background and Caveats
 
-The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this repository, a web-api repository containing a FastAPI restful interface, and a html/css/javascript client browser front end.  See the [VTP-dev-env](https://github.com/TrustTheVote-Project/VTP-dev-env) repo for more info.
+The VoteTracker+ project with respect to executable programs currently consists of a handfull of python scripts in this repository, a web-api repository containing a FastAPI restful interface, and a html/css/javascript client browser front end.  See the [VTP-dev-env](https://github.com/OpenVotingTechnologyGroup/VTP-dev-env) repo for more info.
 
 It is important that the end-voter usage model be as simple as possible and as immune as possible to false narratives and conspiracy theories.  A primary goal of VoteTracker+ is election and ballot trustworthiness.  As such a design goal of VoteTracker+ is that this git repo along with the various git submodules will comprise a specific election, statically, both in terms of code __and__ election configuration data (a.k.a. the ElectionData)  __including__ all the [Cast Vote Records][Cast Vote Record].
 
@@ -32,7 +32,7 @@ It is important that the end-voter usage model be as simple as possible and as i
 
 The VoteTracker+ development process is currently more or less the following:
 
-- Commits are required to be signed.  See [https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/TrustTheVote-Project/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
+- Commits are required to be signed.  See [https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/blob/main/docs/informal-security-overview.md](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/blob/main/docs/informal-security-overview.md)
 - Standard GitHub pull request (PR) development models are in play
 - All pull-requests are squashed-merged onto main - main maintains a linear history
 - All pull-requests pass isort, black, and pylint with a pylint score of 10.0
@@ -65,18 +65,16 @@ $ pipx install poetry
 
 ### 4.2) Clone a mock election repo and this repo
 
-The VotetrackerPlus repo is typically included as a submodule, and that is the case with the [VTP-mock-election.US.10](https://github.com/TrustTheVote-Project/VTP-mock-election.US.10) repo.  Clone that repo enabling submodules:
-
-```bash
-$ mkdir vtp.repos && cd vtp.repos
-$ git clone --recurse-submodules git@github.com:TrustTheVote-Project/VTP-dev-env.git
-```
-
-Each VTP ElectionData repository, mock or otherwise, represents a different election.  An election data repo may be already configured, or may be of a past election, or may be a test/mock election.  The VTP-mock-election.US.10 election data repo is a test/mock election.
+The VotetrackerPlus repo is typically included as a submodule from the git [VTP-dev-env](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus) super project.  See that [README](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus) for cloning the VTP repositoriers including this VotetrackerPlus repo.
 
 ### 4.3) Create a python environment in which to run VTP
 
 See [_tools/build/README.md](../../_tools/build/README.md) for directions of how to set up a python environment and perform a local install so that the VoteTrackerPlus scripts contained in the repo can properly when the python environment is activated.
+
+```bash
+$ make poetry-link
+$ poetry install
+```
 
 ### 4.4) Activate the python environment
 
@@ -88,11 +86,47 @@ $ poetry shell
 
 ### 4.5) Odds and Ends
 
-As VoteTrackerPlus leverages git, one must have a git "user.name" and "user.email" defined somewhere.  One way to accomplish this is the following:
+1) As VoteTrackerPlus leverages git, one must have a git "user.name" and "user.email" defined somewhere.  One way to accomplish this is the following:
 
 ```bash
 $ git config --global user.email "you@example.com"
 $ git config --global user.name "your name"
+```
+
+2) Currently all VTP repositories required signed commits.  If you intend on pushing commits, you will need to create [GitHub gpg keys](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
+
+3) Initially, a new mock election (an ElectionData repo) may not contain anything.  If is it copied from a previous one, it probably will have an election already configured (config.yaml files will be present and configured).  However, an ElectionData repo will normally also need all the blank ballots across the election (across all precincts etc) to also be committed.  All the VTP blank ballots can be created by:
+
+```bash
+$ generate-all-blank-ballots -e ../VTP-mock-election.US.16
+```
+
+4) When creating a fresh mock election repo from scratch, follow the normal steps for creating a demo.  This will create the /opt/VotetrackerPlus/demo.01 tree.  Note - the repos will not yet contain any cast ballots.  To populate the mock repo, runs a few scanners and a tabulator to merge in a few hundred randomly cast ballots to main while leaving 100 unmerged for interactive demo purposes:
+
+- Run a few scanners with -i set to 100 or more to generate that many per contest CVRs
+
+```bash
+# each of the following in a different window and different workspace at the same time
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.00/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.01/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/scanner.02/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d scanner -i 100 -v4
+
+# 25 tabulator iterations should be enough on most systems
+$ cd /opt/VoteTrackerPlus/demo.01/mock-clients/server/VTP-mock-election.US.17.git
+$ run-mock-election -a "123 Main Street" -t Concord -s Massachusetts -d tabulator -i 25 -v4
+```
+
+- At the same time run a tabulator in another window/workspace (the tabulator workspace for example)
+- When all is completed and all cast ballots minus 100 (the default offset) are merged to main, push everything to the non local upstream:
+
+```bash
+$ cd /opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git
+$ git push origin --all
 ```
 
 ### 4.6) Running a mock election
@@ -103,7 +137,7 @@ To run a mock election, run the setup_vtp_demo.py script (which per python's loc
 % setup-vtp-demo -e ../VTP-mock-election.US.16
 Running "git rev-parse --show-toplevel"
 Running "git config --get remote.origin.url"
-Running "git clone --bare git@github.com:TrustTheVote-Project/VTP-mock-election.US.16.git"
+Running "git clone --bare git@github.com:OpenVotingTechnologyGroup/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
 Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
@@ -120,7 +154,7 @@ The resulting directory tree looks like this:
 ├── guid-client-store
 ├── mock-clients
 │   ├── scanner.00
-│   │   └── VTP-mock-election.US.16
+│   │   └── VTP-mock-election.US.17
 │   │       ├── GGOs
 │   │       │   └── states
 │   │       │       └── Massachusetts
@@ -132,7 +166,17 @@ The resulting directory tree looks like this:
 │   │       │           │       └── Concord
 │   │       │           │           ├── CVRs
 │   │       │           │           │   └── contest.json
+│   │       │           │           ├── GGOs
+│   │       │           │           │   └── precincts
+│   │       │           │           │       ├── 1
+│   │       │           │           │       │   └── config.yaml
+│   │       │           │           │       └── 2
+│   │       │           │           │           └── config.yaml
 │   │       │           │           ├── address_map.yaml
+│   │       │           │           ├── blank-ballots
+│   │       │           │           │   └── json
+│   │       │           │           │       ├── 000,001,002,003,004,ballot.json
+│   │       │           │           │       └── 000,001,002,003,005,ballot.json
 │   │       │           │           └── config.yaml
 │   │       │           └── config.yaml
 │   │       ├── LICENSE

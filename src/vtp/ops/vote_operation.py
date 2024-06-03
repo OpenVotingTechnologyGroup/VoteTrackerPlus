@@ -48,6 +48,7 @@ class VoteOperation(Operation):
         blank_ballot: str = "",
         merge_contests: bool = False,
         version_receipts: bool = False,
+        prioritize: bool = False,
     ) -> tuple[dict, int]:
         """Main function - see -h for more info"""
 
@@ -93,6 +94,7 @@ class VoteOperation(Operation):
             cast_ballot=blank_ballot,
             merge_contests=merge_contests,
             version_receipts=version_receipts,
+            prioritize=prioritize,
         )
 
 

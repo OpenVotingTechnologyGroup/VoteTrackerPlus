@@ -57,7 +57,7 @@ poetry-build:
 	rm -f ${BUILD_FILES}
 	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml
 	ln -s ${BUILD_DIR}/poetry_poetry.lock poetry.lock
-	poetry shell && poetry install
+	poetry install
 poetry-list-latest:
 	poetry show -o
 

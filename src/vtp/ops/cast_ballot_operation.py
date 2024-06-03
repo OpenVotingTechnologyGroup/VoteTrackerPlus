@@ -34,7 +34,6 @@ import pyinputplus
 # Project imports
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot
-from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
 
 # Local imports
@@ -52,18 +51,16 @@ class CastBallotOperation(Operation):
         """Will randomly make selections on a contest"""
         # get the possible choices
         choices = the_contest.get("choices")
-        picks = list(range(len(choices)))
         # For plurality and max_selections=1, the first choice is the only
         # choice.  For plurality and max_selections>1, the order does not matter
         # - a selection is a selection.  For RCV, the order does
         # matter as that is the ranking.
         #
         # Choose something randomly
-        random.shuffle(picks)
+        random.shuffle(choices)
         loop = the_contest.get("max_selections")
         while loop > 0:
-            # import pdb; pdb.set_trace()
-            the_contest.add_selection(picks.pop(0))
+            the_contest.add_selection(choices.pop(0))
             loop -= 1
 
     def get_user_selection(self, the_contest, count, total_contests):
@@ -92,10 +89,7 @@ class CastBallotOperation(Operation):
         for choice_index, choice in enumerate(choices):
             # If it is a ticket, need to pretty print the ticket
             if the_contest.get("contest_type") == "ticket":
-                print(
-                    f"  [{choice_index}] {choice} - "
-                    f"{the_contest.pretty_print_a_ticket(choice_index)}"
-                )
+                print(f"  [{choice_index}] {the_contest.pretty_print_a_ticket(choice)}")
             else:
                 print(f"  [{choice_index}] {choice}")
 
@@ -106,9 +100,10 @@ class CastBallotOperation(Operation):
             instance method and does not have a self.
             """
             selections = text.split()
-            choice_max = len(choices)
+            choice_max = the_contest.get("max_selections")
             errors = []
             validated_selections = []
+            # import pdb; pdb.set_trace()
             for num in selections:
                 if not num.isnumeric():
                     errors.append(f"The supplied choice ({num}) is not a number")
@@ -119,20 +114,20 @@ class CastBallotOperation(Operation):
                         f"The supplied choice ({num}) is not a valid selection "
                         f"(must be between 0 and {choice_max - 1} inclusive)"
                     )
-                    continue
+                    break
                 if tally == "plurality" and len(selections) > choice_max:
                     errors.append(
                         f"This contest is limited to at most {max_votes} selection(s): "
                         f"you supplied {len(selections)}"
                     )
-                    continue
+                    break
                 #            import pdb; pdb.set_trace()
                 if num in validated_selections:
                     errors.append(
                         f"The selection {num} was supplied more than once.  "
                         "Each selection can only be supplied once."
                     )
-                    continue
+                    break
                 validated_selections.append(num)
             if errors:
                 err_string = "\n".join(errors)
@@ -145,7 +140,7 @@ class CastBallotOperation(Operation):
             # before adding
             the_contest.clear_selection()
             for sel in validated_selections:
-                the_contest.add_selection(sel)
+                the_contest.add_selection("", offset=sel)
 
         if tally == "plurality":
             if max_votes > 1:
@@ -199,13 +194,10 @@ class CastBallotOperation(Operation):
                         )
                     else:
                         for selection in contest.get("selection"):
-                            offset, name = Contest.split_selection(selection)
                             if contest.get("contest_type") == "ticket":
-                                print(
-                                    f"  [{offset}] {name} - {contest.pretty_print_a_ticket(offset)}"
-                                )
+                                print(f"  {contest.pretty_print_a_ticket(selection)}")
                             else:
-                                print(f"  [{offset}] {name}")
+                                print(f"  {selection}")
                 prompt = (
                     "Is this correct?  "
                     "Enter yes to accept the ballot, no to reject the ballot: "
