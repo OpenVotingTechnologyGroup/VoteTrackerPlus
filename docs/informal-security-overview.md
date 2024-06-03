@@ -21,25 +21,25 @@ Since the planning as well as the execution of a public election occurs over man
 3) Election day activities
 4) Post election day activities
 
-There is a (Threat Model MindMap)[https://mm.tt/app/map/3063357845?t=DuNY3bTVbg] that might be of interest.
+There is a pewliminary [Threat Model MindMap](https://mm.tt/app/map/3063357845?t=DuNY3bTVbg).
 
-The primary driver for the first three domains is due to VoteTrackerPlus's primary design tenet is that since both the recorded per contest CVRs and ballot receipts are already anonymous when they are added to the underlying Git Merkle Tree, there is no need or desire to encrypt the data at rest.  However, since the all the election data (software, election definition, cast contest CVRs etc) is also stored in the same underlying Git Merkle Tree, attack surface wise this results in the integrity of the Merkle Tree itself as a primary target and hence attack surface.
+The motivation for the first three domains is due to VoteTrackerPlus's primary design tenet is that since both the recorded per contest CVRs and ballot receipts are already anonymous when they are added to the underlying Git Merkle Tree, there is no need or desire to encrypt the data at rest.  However, since the all the election data (software, election definition, cast contest CVRs etc) is also stored in the same underlying Git Merkle Tree, attack surface wise this results in the integrity of the Merkle Tree itself as a primary target and hence attack surface.
 
-Thus a major benefit as well as an attack surface of VTP is the data at rest itself, protected by the natural Git Merkle Tree.  Thus Data-at_rest is called out as the first domain of interest.
+Thus a major benefit as well as an attack surface of VTP is the data at rest itself, protected by the native Git Merkle Tree.  Thus Data-at_rest is called out as the first security domain of interest.
 
 The Data-in-Motion-Local domain refers to contest level CVRs and ballot receipts moving in the local polling location (call it LAN local motion, though actual VTP deployments may not have a LAN).  The polling location may support in-person voting or it may be an election official (and public watchers) only location.
 
 The Data-in-Motion-Remote domains refers to when the local Git repos are being transferred/pushed/pulled to/from the upstream remote or when upstream remote changes are being pulled down to the polling location.  This includes updating git submodule references.
 
-A primary driver for the second four time partitions of a election is due to VoteTrackerPlus's primary design that all the software and blank ballot definitions are also part of the underlying Git Merkle Tree.  As such, as the election is defined, deployed, and tested, VoteTrackerPlus brings modern (software development processes)[https://en.wikipedia.org/wiki/Software_development_process] to this pre election day time period by incorporating modern (agile project management)[https://en.wikipedia.org/wiki/Agile_software_development] and (DecSecOps automation)[https://en.wikipedia.org/wiki/DevOps#DevSecOps,_shifting_security_left].
+A motivation for the four time partitions of a election is due to the fact that all the software and blank ballot definitions are also part of the underlying VoteTrackerPlus Git Merkle Tree.  As such, as the election is defined, deployed, and tested, VoteTrackerPlus brings modern (software development processes)[https://en.wikipedia.org/wiki/Software_development_process] to the pre election day time period by incorporating modern (agile project management)[https://en.wikipedia.org/wiki/Agile_software_development] and (DecSecOps automation)[https://en.wikipedia.org/wiki/DevOps#DevSecOps,_shifting_security_left].
 
 ## 3) What does this page not cover?
 
-Lots.  This page is just an overview of VTP workflows from a security point of view.  In addition, election officials in different precincts will chose different VTP deployment models with different election equipment.  Such choices will directly effect the scope of various attack surfaces.  For example, one precinct may decide to have one VTP tabulator per polling center while another may wish to place a VTP tabulator in each ballot scanner while yet another may simply use dedicated touch screens resulting in effectively one VTP scanner and one VTP tabulator.
+A lot - this page is just an overview of VTP workflows from a security point of view.  In addition, election officials in different precincts will chose different VTP deployment models with different election equipment.  Such choices will directly effect the scope of the attack surface.  For example, one precinct may decide to have one VTP tabulator per polling center while another may wish to place a VTP tabulator in each ballot scanner while yet another may simply use dedicated touch screens resulting in effectively one VTP scanner and one VTP tabulator.
 
-Also, election officials can decide how to push and pull VTP data to/from the remote.  The push'es and pulls could occur by sneaker, wire, or radio frequencies.
+Also, election officials can decide how to push and pull VTP data to/from the remote.  The push'es and pulls could occur by sneaker, wire, or radio frequency.
 
-Note - regardless of mode the data should always be encrypted and follow solid industrial/military grade encryption standards regarding data movement.
+Note - regardless of mode the data should always be encrypted and follow established industrial/military grade encryption standards regarding data movement.
 
 ## 4) VTP is not introducing a new cryptographic protocol
 
