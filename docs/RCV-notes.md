@@ -2,7 +2,7 @@
 
 VoteTrackerPlus (VTP) provides unique insight and transparency to Rank Choice Vote (RCV) contests.  Since VTP provides an anonymous way for every voter to track their individual contest votes in an unencrypted data-at-rest manner, the end voter can witness - replay in a repeatable manner - the tally of their specific vote.
 
-It is one thing to see a plurality contest tally of a few thousand votes (a local election) or a few million votes (a national election) and witness one's vote being adding to the tally on ones own smart device.  And then to additionally have that tally match the same VTP tally that election officials report.  But in the case of RCV contests, such transparency is important for several additional reason: namely, though RCV contests provide better and more fair and representative elections, RCV contests are more complicated to implement, understand, and hence trust.  RCV are more prone to misinformation and malinformation attacks.
+It is one thing to see a plurality contest tally of a few thousand votes (a local election) or a few million votes (a national election) and witness one's vote being adding to the tally on ones own smart device.  And then to additionally have that tally match the same VTP tally that election officials report.  But in the case of RCV contests, such transparency is important for a few additional reasons: namely, though RCV contests provide better and more fair and representative elections, RCV contests are more complicated to implement, understand, and hence be trusted by the general public.  RCV contests are more prone to misinformation and malinformation attacks.
 
 With VTP and its inherent transparency, every end voter can witness each run-off round of a RCV contest and potentially witness their specific vote get re-cast if they have voted for a losing-round candidate.  Not only does this transparency increase trust in RCV tallies but it also helps explain how RCV tallies work.
 
@@ -68,8 +68,8 @@ Final results for contest U.S. Senate (uid=0001):
   ('Emily Echo', 0)
   ('Gloria Gamma', 0)
 ```
-In the above, any voter who tallies the U.S. Senate contest and supplies the 374ce87855270169b3fe7007249ab67eb599a6dd as a contest check (digest) to track will observe that in round 4, that vote was recast from Francis Foxtrot to Anthony Alpha, and it was done so as vote 15 out of 170 ballots.
+In the above, any voter who tallies the U.S. Senate contest and supplies the 374ce87855270169b3fe7007249ab67eb599a6dd as a contest check (digest) to track will observe that in round 4, that vote was recast from Francis Foxtrot to Anthony Alpha, and it was done so as vote 15 out of 170 votes.
 
-Though VTP can print all the recastings, being able to show the specific recasting of a voter's specific vote (who remembers their ballot receipt's secret row number) so that they can verify that their vote has been cast, counted, and tallied correctly, adds extra resilience to RCV in the face of misinformation and malinformation attacks.
+Though VTP can print all the round recastings, being able to show the specific recasting of a voter's specific vote (who remembers their ballot receipt's secret row number) so that they can verify that their vote has been correctly cast, counted, and tallied, adds extra resilience to RCV in the face of misinformation and malinformation attacks.
 
 Note that all the software to execute the tally is included in the VTP [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree), so that when downloading the VTP repos for the election, the voter also gets all the software to run the tallies locally on their smart devices.
