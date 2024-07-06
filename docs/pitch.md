@@ -2,7 +2,7 @@
 
 VoteTrackerPlus (VTP) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied as intended. VTP provides three novel and unique core capabilities that increase the security, accuracy, and trustworthiness of elections:
 
-1. Provides a cryptographically sealed, anonymized, and yet unencrypted ballot receipt back to the voter, allowing the voter to validate that their ballot has correctly cast and tallied - a.k.a. End-to-End Verification ([E2EV](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems))
+1. Provides a cryptographically sealed, anonymized, and yet unencrypted ballot receipt back to the voter, allowing the voter to validate that their ballot has correctly cast and tallied - a.k.a. zero trust End-to-End Verification ([E2EV](https://en.wikipedia.org/wiki/End-to-end_auditable_voting_systems))
 
 2. Cryptographically records and seals the complete history of the election, pre and post election day
 
