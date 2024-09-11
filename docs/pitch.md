@@ -6,8 +6,8 @@ VoteTrackerPlus (VTP) is a 100% open source project that offers a verifiable gua
 
 2. Cryptographically records and seals the complete history of the election, pre and post election day
 
-3. Allows the public to inspect and validate the contest tallies as well as potentially, via optional future extensions, the aggregate voter ID rolls across the entire VTP participating electorate and previous elections
+3. Allows the public to inspect the contest tallies, personally validating the official tallies
 
-VTP is designed fundamentally as both a plugin to existing election equipment and as a standalone election solution.  As a plugin VTP can be incorporated immediately into existing certified paper based election equipment avoiding the upfront certification process.  Regarding internet based voting solutions, either as a complete standalone election solution or as a plugin, VTP can be rolled out today to create a 100% closed loop  end-voter based E2EV solution, securing internet voting without relying on encrypted data at rest solutions.
+VoteTrackerPlus can handle in-person, mail-in, absentee, early voting, and pure internet based voting.  VTP is designed fundamentally as both a plugin to existing election equipment and as a standalone election solution.  As a plugin VTP can be incorporated immediately into existing certified paper based election equipment avoiding the upfront certification process.  Regarding internet based voting solutions, either as a complete standalone election solution or as a plugin, VTP can be rolled out today to create a 100% closed loop end-voter based E2EV solution, securing internet voting without relying on encrypted data at rest solutions.
 
-In summary, VoteTrackerPlus can handle in-person, mail-in, absentee, early voting, and pure internet based voting, all with or without paper based ballots, either as a third party plugin or as an independent solution.
+And when combined with the completely independent [RegistrationTrackerPlus](https://github.com/OpenVotingTechnologyGroup/RegistrationTrackerPlus) (RTP) plugin, the entire public election becomes digitally secure and trustworthy.
