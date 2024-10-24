@@ -180,7 +180,7 @@ class MergeContestsOperation(Operation):
                 incoming_printlevel=5,
             )
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def randomly_merge_contests(
         self, uid: str, batch: list, minimum_cast_cache: int, flush: bool, remote: bool
     ):

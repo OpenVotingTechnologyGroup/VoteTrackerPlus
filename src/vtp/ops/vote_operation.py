@@ -41,7 +41,7 @@ class VoteOperation(Operation):
     """
 
     # pylint: disable=duplicate-code
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def run(
         self,
         an_address: Address,

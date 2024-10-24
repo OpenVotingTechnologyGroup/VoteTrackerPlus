@@ -46,7 +46,7 @@ class RunMockElectionOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
     # problem child
@@ -196,6 +196,7 @@ class RunMockElectionOperation(Operation):
             incoming_printlevel=4,
         )
 
+    # pylint: disable=too-many-positional-arguments
     def tabulator_mockup(
         self,
         the_election_config: ElectionConfig,
@@ -276,7 +277,7 @@ class RunMockElectionOperation(Operation):
         # tally_contests.run()
 
     # pylint: disable=duplicate-code
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def run(
         self,
         an_address: Address = None,

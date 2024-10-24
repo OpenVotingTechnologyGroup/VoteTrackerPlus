@@ -63,7 +63,7 @@ class Address:
         address.map_ggos(config, ggos=ggos)
         return address
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def __init__(
         self,
         address: str = "",

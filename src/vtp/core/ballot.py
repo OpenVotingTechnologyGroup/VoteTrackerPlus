@@ -354,7 +354,7 @@ class Ballot:
             )
         return contest_file
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def write_receipt_csv(
         self,
         lines: list,
@@ -391,7 +391,7 @@ class Ballot:
         return receipt_file
 
     # pylint: disable=too-many-locals
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def write_receipt_md(
         self,
         lines: list,

@@ -93,7 +93,7 @@ class AcceptBallotOperation(Operation):
             f"{secrets.token_hex(5)}"
         )
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def checkout_new_branch(
         self,
         the_election_config: dict,
@@ -547,7 +547,7 @@ class AcceptBallotOperation(Operation):
 
     # pylint: disable=duplicate-code
     # pylint: disable=too-many-locals
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def run(
         self,
         an_address: Address = None,

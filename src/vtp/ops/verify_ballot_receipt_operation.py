@@ -39,7 +39,8 @@ class VerifyBallotReceiptOperation(Operation):
     description (immediately below this) in the source file.
     """
 
-    # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # self is not technically an arg kind-of
     def validate_ballot_lines(
         self, lines, headers, uids, the_election_config, error_digests
     ):
@@ -93,7 +94,8 @@ class VerifyBallotReceiptOperation(Operation):
                 column = 1
                 row += 1
 
-    # pylint: disable=too-many-arguments   # self is not technically an arg kind-of
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    # self is not technically an arg kind-of
     def vet_rows(
         self,
         lines,
@@ -163,7 +165,7 @@ class VerifyBallotReceiptOperation(Operation):
                     continue
         return (requested_row, requested_digests)
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-positional-arguments
     def verify_ballot_receipt(
         self,
         receipt_file: str,
@@ -315,7 +317,7 @@ class VerifyBallotReceiptOperation(Operation):
             self.imprimir(f"[GOOD]: ballot {thing} VALID - no digest errors found", 0)
             self.imprimir_formatting("end_good_box")
 
-    # pylint: disable=duplicate-code
+    # pylint: disable=duplicate-code,too-many-positional-arguments
     def run(
         self,
         receipt_file: str = "",

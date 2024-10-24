@@ -72,7 +72,7 @@ class Operation:
     #     "initialized": False,
     # }
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def __init__(
         self,
         election_data_dir: str = "",

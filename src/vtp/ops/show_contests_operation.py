@@ -37,6 +37,8 @@ class ShowContestsOperation(Operation):
     description (immediately below this) in the source file.
     """
 
+    # pylint: disable=R0801
+    # (see ops.show_contests_operation:[60:70] and ops.verify_ballot_receipt_operation:[60:71])
     def validate_digests(
         self,
         digests: str,
