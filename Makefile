@@ -31,6 +31,8 @@ help:
 	@echo "${RED}There is no default make target.${END}  Specify one of:"
 	@echo "poetry-build            - performs a poetry local install"
 	@echo "poetry-link             - refreshes local (poetry file) symlinks"
+	@echo "poetry-update           - instructions for updating poetry, python,"
+	@echo "                          and the installed python packages"
 	@echo "poetry-list-latest      - will show which poetry packages have updates"
 	@echo "setuptools-build        - performs a setuptools local install"
 	@echo "setuptools-legacy-build - performs a legacy setuptools local install"
@@ -48,7 +50,7 @@ conda-export:
 	pip freeze > requirements.txt
 
 # Build with poetry
-.PHONY: poetry-build poetry-link poetry-list-latest
+.PHONY: poetry-build poetry-link poetry-list-latest poetry-update
 poetry-link:
 	rm -f ${BUILD_FILES}
 	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml
@@ -60,6 +62,15 @@ poetry-build:
 	poetry install
 poetry-list-latest:
 	poetry show -o
+poetry-update:
+	@echo "1st: start a poetry shell:     $$ poetry shell"
+	@echo "2nd: update poetry itself:     $$ poetry self update"
+	@echo "3rd: see what needs updating:  $$ make poetry-list-latest"
+	@echo "4th: manually update explicitly listed packages in pyproject.toml"
+	@echo "5th: update everything else:   $$ poetry update"
+	@echo "6th: test with pylint:         $$ make pylint"
+	@echo "7th: test with pytest:         $$ make pytest"
+	@echo "8th: run manual tests by running an mock election"
 
 # Build with setuptools
 .PHONY: setuptools-build
