@@ -98,10 +98,10 @@ $ git config --global user.name "your name"
 3) Initially, a new mock election (an ElectionData repo) may not contain anything.  If is it copied from a previous one, it probably will have an election already configured (config.yaml files will be present and configured).  However, an ElectionData repo will normally also need all the blank ballots across the election (across all precincts etc) to also be committed.  All the VTP blank ballots can be created by:
 
 ```bash
-$ generate-all-blank-ballots -e ../VTP-mock-election.US.16
+$ generate-all-blank-ballots -e ../VTP-mock-election.US.17
 ```
 
-4) When creating a fresh mock election repo from scratch, follow the normal steps for creating a demo.  This will create the /opt/VotetrackerPlus/demo.01 tree.  Note - the repos will not yet contain any cast ballots.  To populate the mock repo, runs a few scanners and a tabulator to merge in a few hundred randomly cast ballots to main while leaving 100 unmerged for interactive demo purposes:
+4) When creating a fresh mock election repo from scratch, follow the normal steps for creating a demo in section 4.6 below.  The "setup-vtp-demo" script will create the /opt/VotetrackerPlus/demo.01 tree.  Note - the repos will not yet contain any cast ballots - setup-vtp-demo simply creates the directory structure.  To populate the mock repo, run a few scanners and a tabulator to merge in a few hundred randomly cast ballots to main git branch while leaving 100 unmerged for interactive demo purposes:
 
 - Run a few scanners with -i set to 100 or more to generate that many per contest CVRs
 
@@ -134,15 +134,15 @@ $ git push origin --all
 To run a mock election, run the setup_vtp_demo.py script (which per python's local install described above is installed in the python environment as _setup-vtp-demo_).  This script will nominally create a mock election with four VTP scanner _apps_ and one VTP tabulation server _app_ as if all ballots were being cast in a single voting center with four separate and independent ballot scanners.  By default it will place the git repos in /opt/VotetrackerPlus with the 5 clients (the four scanner apps and one server app) in the _clients_ folder with the two local git upstream bare repositories in the _tabulation-server_ folder.
 
 ```
-% setup-vtp-demo -e ../VTP-mock-election.US.16
+% setup-vtp-demo -e ../VTP-mock-election.US.17
 Running "git rev-parse --show-toplevel"
 Running "git config --get remote.origin.url"
-Running "git clone --bare git@github.com:OpenVotingTechnologyGroup/VTP-mock-election.US.16.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
-Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.16.git"
+Running "git clone --bare git@github.com:OpenVotingTechnologyGroup/VTP-mock-election.US.17.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.17.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.17.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.17.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.17.git"
+Running "git clone /opt/VoteTrackerPlus/demo.01/tabulation-server/VTP-mock-election.US.17.git"
 ```
 
 The resulting directory tree looks like this:
@@ -184,19 +184,19 @@ The resulting directory tree looks like this:
 │   │       ├── README.md
 │   │       └── config.yaml
 │   ├── scanner.01
-│   │   └── VTP-mock-election.US.16
+│   │   └── VTP-mock-election.US.17
 [... ditto ...]
 │   ├── scanner.02
-│   │   └── VTP-mock-election.US.16
+│   │   └── VTP-mock-election.US.17
 [... ditto ...]
 │   ├── scanner.03
-│   │   └── VTP-mock-election.US.16
+│   │   └── VTP-mock-election.US.17
 [... ditto ...]
 │   └── server
-│       └── VTP-mock-election.US.16
+│       └── VTP-mock-election.US.17
 [... ditto ...]
 └── tabulation-server
-    └── VTP-mock-election.US.16.git
+    └── VTP-mock-election.US.17.git
         ├── HEAD
         ├── config
         ├── description
@@ -238,27 +238,27 @@ Here is an example of running a 4 VTP scanner and 1 VTP server app mock demo ele
 ```bash
 # In terminal window #1, run a VTP tabulation server
 # Note - this assumes the explicit setup steps above - note the poetry pyproject.toml location
-$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.17/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/server/VoteTrackerPlus
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d server
 
 # In terminal window #2, run a VTP scanner in mock election mode
-$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.17/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.01/VoteTrackerPlus
 # Auto cast 100 random ballots
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #3, run a second VTP scanner in mock election mode
-$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.17/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.02/VoteTrackerPlus
 # Auto cast 100 random ballots
 $ run-mock-election -s Massachusetts -t Concord -a "123 Main Street" -d scanner -i 100
 
 # In terminal window #4, run an interactive VTP scanner to cast ballots
-$ cd vtp.repos/VTP-mock-election.US.16/VoteTrackerPlus
+$ cd vtp.repos/VTP-mock-election.US.17/VoteTrackerPlus
 $ poetry shell
 $ cd /opt/VotetrackerPlus/demo.01/clients/scanner.00/VoteTrackerPlus
 
