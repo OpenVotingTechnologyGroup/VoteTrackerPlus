@@ -40,6 +40,30 @@ class Contest:
     selection logic was moved from the Ballot class to this class
     while changing the Ballot class to _always_ create Contest objects
     when it encounters a contest.
+
+    Note - the contest is a dict with the following set-able keys:
+    - choices: a list of choices, each choice is either a string or a dict
+      with the keys 'name' and optionally 'party' and 'ticket_names'
+    - tally: the tally type, either 'plurality' or 'rcv'
+    - win_by: currently defunct (was setable)
+    - max_selections: the maximum number of selections a voter may select.  Defaults
+      to 1 for plurality and the number of choices for RCV.
+    - open_positions: number of open positions.  Defaults to 1 for both plurality and RCV.
+    - write_in: a boolean indicating if write-in votes are allowed, defaults to False
+    - description: a optional string describing the contest
+    - contest_type: the type of contest, either 'candidate', 'ticket', or 'question'
+    - ticket_titles: a list of titles for the tickets, only used in ticket contests
+    - election_upstream_remote: a string indicating the upstream remote for the election,
+      used for voter UX
+    - contest_name: a string indicating the name of the contest
+    - ggo: a string indicating the GGO (General Governmental Organization) for the contest
+
+    The contest also has the following keys that are not part of the
+    contest dict but are used for internal tracking and management:
+    - uid: a unique identifier for the contest, automatically generated.
+    - selection: a list of selections made by the voter, can be empty.
+    - cast_branch: a string indicating the branch of the cast vote, used for tracking.
+    - name: a string indicating the name of the contest.
     """
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
@@ -49,6 +73,7 @@ class Contest:
         "tally",
         "win_by",
         "max_selections",
+        "open_positions",
         "write_in",
         "description",
         "contest_type",
@@ -209,17 +234,12 @@ class Contest:
             # If win_by is not set
             if "win_by" not in a_contest_blob:
                 # ZZZ - it is unclear what win_by may actually want to
-                # mean from a UX POV.  For now, simple set it to "max"
-                # for plurality and "0.5" for IRV(1), which implies
-                # the winning plurality choice and the first IRV(1)
-                # candidate past the 50% mark.  Note - a value of
-                # "max" in IRV(1) could mean after all rounds TBD.
-                if a_contest_blob["contest_type"] == "plurality":
-                    a_contest_blob["win_by"] = "max"
-                else:
-                    # Note - RCV tallies are technically IRV(1)
-                    # tallies currently
-                    a_contest_blob["win_by"] = "0.5"
+                # mean from a UX POV.  For now, simple leave it unset.
+                # In the future it may be supported to support for
+                # example a question that needs 2/3rds or some non
+                # simple max to win.  By default plurality and RCV will
+                # do the right thing when it is not set.
+                pass
             # Add an empty selection if it does not exist
             if "selection" not in a_contest_blob:
                 a_contest_blob["selection"] = []

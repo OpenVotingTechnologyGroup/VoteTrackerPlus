@@ -28,6 +28,7 @@ the Merkle tree.
 # Standard imports
 import pprint
 import random
+import sys
 
 import pyinputplus
 
@@ -67,21 +68,21 @@ class CastBallotOperation(Operation):
         """Print the contest and get the selection(s) from the user"""
         choices = the_contest.get("choices")
         tally = the_contest.get("tally")
-        max_votes = the_contest.get("max_selections")
+        max_selections = the_contest.get("max_selections")
         # Print something
         print(f"################ ({count} of {total_contests})")
         print(f"Contest {the_contest.get('uid')}: {the_contest.get('contest_name')}")
         if tally == "plurality":
             print(f"- This is a {tally} tally")
             print(
-                f"- The voting is for {max_votes} open "
-                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]} - "
-                f"only {max_votes} selection{'s'[:max_votes^1]} can be choosen."
+                f"- The voting is for {max_selections} open "
+                f"position{'s' * (max_selections != 1)}/choice{'s' * (max_selections != 1)} - "
+                f"only {max_selections} selection{'s' * (max_selections != 1)} can be choosen."
             )
         else:
             print(
-                f"- This is a {tally} tally with {max_votes} open "
-                f"position{'s'[:max_votes^1]}/choice{'s'[:max_votes^1]}.  "
+                f"- This is a {tally} tally with {max_selections} open "
+                f"position{'s' * (max_selections != 1)}/choice{'s' * (max_selections != 1)}.  "
                 f"Up to {len(choices)} selection{'s'[:len(choices)^1]} can be rank choosen."
             )
 
@@ -105,6 +106,8 @@ class CastBallotOperation(Operation):
             validated_selections = []
             # import pdb; pdb.set_trace()
             for num in selections:
+                if isinstance(num, str) and num.lower() in ["q", "quit"]:
+                    sys.exit(f"Quiting on user's choice {num}")
                 if not num.isnumeric():
                     errors.append(f"The supplied choice ({num}) is not a number")
                     continue
@@ -117,7 +120,7 @@ class CastBallotOperation(Operation):
                     break
                 if tally == "plurality" and len(selections) > choice_max:
                     errors.append(
-                        f"This contest is limited to at most {max_votes} selection(s): "
+                        f"This contest is limited to at most {max_selections} selection(s): "
                         f"you supplied {len(selections)}"
                     )
                     break
@@ -143,9 +146,9 @@ class CastBallotOperation(Operation):
                 the_contest.add_selection("", offset=sel)
 
         if tally == "plurality":
-            if max_votes > 1:
+            if max_selections > 1:
                 prompt = (
-                    f"Please enter the numbers for your choices (max={max_votes}) "
+                    f"Please enter the numbers for your choices (max={max_selections}) "
                     "separated by spaces: "
                 )
             else:

@@ -231,6 +231,7 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
                 incoming_printlevel=5,
             )
             result2 = self.operation_self.shell_out(
@@ -238,6 +239,7 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
                 incoming_printlevel=5,
             )
 
