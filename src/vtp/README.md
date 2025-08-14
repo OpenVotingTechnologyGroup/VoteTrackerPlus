@@ -342,6 +342,13 @@ Final results for contest U.S. Senate (uid=0001):
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.  See [../../docs/E2EV.md][E2EV.md] for more details.
 
+### 4.7) Pushing results
+
+Depending on the goals of the mock election, the local-remote repo can be pushed to the real upstream (github) repository.  However doing so will cause the next setup-vtp-demo for this mock election to pull the now updated github repository.  The local-remote (bare) repository is located in **/opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git**:
+
+% cd /opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git
+% git push origin --all
+
 ## 5) Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.

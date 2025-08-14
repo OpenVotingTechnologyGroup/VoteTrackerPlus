@@ -45,10 +45,15 @@ class Contest:
     - choices: a list of choices, each choice is either a string or a dict
       with the keys 'name' and optionally 'party' and 'ticket_names'
     - tally: the tally type, either 'plurality' or 'rcv'
-    - win_by: currently defunct (was setable)
+    - win_by: currently defunct (was setable).  Support for setting this can
+      re-appear when support for simple contests with non simple majority (say
+      2/3 majority) winners are supported.  So for plurality it is ignored.  For
+      RCV it is set dynamically per open_position round as a function of open_positions.
     - max_selections: the maximum number of selections a voter may select.  Defaults
       to 1 for plurality and the number of choices for RCV.
     - open_positions: number of open positions.  Defaults to 1 for both plurality and RCV.
+      This is basically the number of open seats.  When tally=RCV and open_positions=1,
+      RCV more or less becomes STV.
     - write_in: a boolean indicating if write-in votes are allowed, defaults to False
     - description: a optional string describing the contest
     - contest_type: the type of contest, either 'candidate', 'ticket', or 'question'
@@ -67,11 +72,13 @@ class Contest:
     """
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
-    # 'name' are not legitimate keys for blank ballots
+    # 'name' are not legitimate keys for blank ballots.  Unless
+    # otherwise explicitly stated, all the fields coming from the yaml
+    # data are strings and not integers.
     _config_keys = [
         "choices",
         "tally",
-        "win_by",
+        "win_by",                         # when auto generated a float
         "max_selections",
         "open_positions",
         "write_in",
@@ -231,15 +238,34 @@ class Contest:
                     a_contest_blob["max_selections"] = 1
                 else:
                     a_contest_blob["max_selections"] = len(a_contest_blob["choices"])
+            # open_positions cannot be 0 and must be defined
+            if "open_positions" not in a_contest_blob:
+                raise KeyError(
+                    f"open_positions must be defined as a non zero postive integer - it is not defined"
+                )
+            if not a_contest_blob["open_positions"].isdigit():
+                raise KeyError(
+                    f"open_positions must be a non zero postive integer ({a_contest_blob['open_positions']})"
+                )
+            open_positions = int(a_contest_blob["open_positions"])
+            if open_positions < 1:
+                raise KeyError(
+                    f"open_positions must be an integer greater than zero ({a_contest_blob['open_positions']})"
+                )
             # If win_by is not set
             if "win_by" not in a_contest_blob:
-                # ZZZ - it is unclear what win_by may actually want to
-                # mean from a UX POV.  For now, simple leave it unset.
-                # In the future it may be supported to support for
-                # example a question that needs 2/3rds or some non
-                # simple max to win.  By default plurality and RCV will
-                # do the right thing when it is not set.
-                pass
+                # Note1: it is possible to set win_by in the
+                # electionData when the contest is a simple contest
+                # (non RCV).  When plurality it is a majority
+                # regardless.  For RCV it is derived as a Droop quota:
+                # GREATER than total votes/(k +1) where k =
+                # open_positions.  win_by is just the percentage, not
+                # the actual necessary vote count to be a winner.
+                a_contest_blob["win_by"] = 1.0 / (open_positions + 1.0)
+            elif not a_contest_blob["plurality"]:
+                raise KeyError(
+                    f"setting win_by in a non plurality contest is not supported - it does make sense"
+                )
             # Add an empty selection if it does not exist
             if "selection" not in a_contest_blob:
                 a_contest_blob["selection"] = []

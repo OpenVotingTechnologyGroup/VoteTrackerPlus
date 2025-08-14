@@ -82,8 +82,15 @@ class Tally:
         # ZZZ - cache these values
         self.defaults = {
             "max_selections": self.contest["max_selections"],
-            "win_by": self.contest["win_by"],
+            "open_positions": self.contest["open_positions"],
         }
+        # For RCV tallies the default will change for each successive
+        # seat in multiseat contests. The if clause is only here for
+        # back compatbility with older mock electionData sets.
+        if "win_by" not in self.contest:
+            self.defaults["win_by"] = 1.0 / (int(self.contest["open_positions"]) + 1.0)
+        else: 
+            self.defaults["win_by"] = self.contest["win_by"]
 
         # Need to keep track of a selections/choices that are no longer
         # viable - key=choice['name'] value=obe round
@@ -99,16 +106,16 @@ class Tally:
 
     def get(self, name: str):
         """Simple limited functionality getter"""
-        # ZZZ import pdb; pdb.set_trace()
-        if name in ["max_selections", "win_by"]:
+        if name in ["max_selections", "open_positions", "win_by"]:
+            # ZZZ import pdb; pdb.set_trace()
             return self.defaults[name]
         if name in [
-            "digest",
             "contest",
+            "digest",
+            "rcv_round",
             "selection_counts",
             "vote_count",
             "winner_order",
-            "rcv_round",
         ]:
             return getattr(self, name)
         raise NameError(f"Name {name} not accepted/defined for Tally.get()")
