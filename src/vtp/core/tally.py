@@ -89,7 +89,7 @@ class Tally:
         # back compatbility with older mock electionData sets.
         if "win_by" not in self.contest:
             self.defaults["win_by"] = 1.0 / (int(self.contest["open_positions"]) + 1.0)
-        else: 
+        else:
             self.defaults["win_by"] = self.contest["win_by"]
 
         # Need to keep track of a selections/choices that are no longer

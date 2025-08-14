@@ -78,7 +78,7 @@ class Contest:
     _config_keys = [
         "choices",
         "tally",
-        "win_by",                         # when auto generated a float
+        "win_by",  # when auto generated a float
         "max_selections",
         "open_positions",
         "write_in",
@@ -241,16 +241,19 @@ class Contest:
             # open_positions cannot be 0 and must be defined
             if "open_positions" not in a_contest_blob:
                 raise KeyError(
-                    f"open_positions must be defined as a non zero postive integer - it is not defined"
+                    "open_positions must be defined as a non zero postive integer - "
+                    "it is not defined"
                 )
             if not a_contest_blob["open_positions"].isdigit():
                 raise KeyError(
-                    f"open_positions must be a non zero postive integer ({a_contest_blob['open_positions']})"
+                    "open_positions must be a non zero postive integer "
+                    f"({a_contest_blob['open_positions']})"
                 )
             open_positions = int(a_contest_blob["open_positions"])
             if open_positions < 1:
                 raise KeyError(
-                    f"open_positions must be an integer greater than zero ({a_contest_blob['open_positions']})"
+                    "open_positions must be an integer greater than zero "
+                    f"({a_contest_blob['open_positions']})"
                 )
             # If win_by is not set
             if "win_by" not in a_contest_blob:
@@ -264,7 +267,8 @@ class Contest:
                 a_contest_blob["win_by"] = 1.0 / (open_positions + 1.0)
             elif not a_contest_blob["plurality"]:
                 raise KeyError(
-                    f"setting win_by in a non plurality contest is not supported - it does make sense"
+                    "setting win_by in a non plurality contest is not supported - "
+                    "it does make sense"
                 )
             # Add an empty selection if it does not exist
             if "selection" not in a_contest_blob:
