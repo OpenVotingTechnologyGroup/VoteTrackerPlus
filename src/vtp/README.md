@@ -349,7 +349,7 @@ Depending on the goals of the mock election, the local-remote repo can be pushed
 % cd /opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git
 % git push origin --all
 
-## 5) Development cycle
+## 5) Feature/Debug Development cycle
 
 New development should use a feature branch directly in this repo.  New ElectionData repositories can be created at will.  Signed commits are required in both repos.
 
@@ -360,6 +360,29 @@ New development should use a feature branch directly in this repo.  New Election
 5) Validate the mock election tests
 6) Push code
 7) Create a pull request
+
+Note - each VTP git repo is its own python or JavaScript project, so each nominally has its own environment.  FWIIW the documentation here more or less assumes poetry for python env management.   It also assumes Microsoft Visual Code for debugging.   Your code debugging environment may and can vary.   Regardless the VTP project has been set up to be properly installed locally via poetry such that wherever (whatever directory) one is running code, your current shell environment holds the (locally installed VTP scripts) context.
+
+## 6) Switching ElectionData directories
+
+When switching to a new ElectionData directory - when running a new election, mock or otherwise - the process starts with removing the existing/old ElectionData git submodule and adding a new one.  Follow current git best practices for doing that, which as if this writing is something like:
+
+```bash
+# To switch ElectionData repos/git submodules, run the following:
+% git rm <the-old-ElectionData>
+% git add <the-new-ElectionData>
+# And then commit the change and push everything
+
+# To consume the new submodule in other clones/VTP-dev-env workspaces
+% git pull
+% git submodule sync --recursive
+% git submodule update --init --recursive
+% git submodule update --remote --recursive  # fetches latest commits (but does not update HEAD)
+
+# Note that the VTP-dev-env Makefile contains some support for working with submodules:
+% BRANCH=5-support-for-multi-seat-sequential-rcv make checkout   # will checkout latest commit on branch BRANCH
+
+```
 
 [Cast Vote Record]: https://pages.nist.gov/ElectionGlossary/#cast-vote-record
 [E2EV.md]: ../../docs/E2EV.md
