@@ -342,7 +342,11 @@ Final results for contest U.S. Senate (uid=0001):
 ```
 FYI - with -v4 and RCV contests, how each specific voter's ranked choice selection gets re-directed from their last place loosing candidate to their next choice candidate is printed, offering full transparency to RVC contests.  See [../../docs/E2EV.md][E2EV.md] for more details.
 
-### 4.7) Pushing results
+### 4.7) Debugging code
+
+When running IDE such as Micosoft's Visual Studio Code, the IDE should be executed from within the submodule and not from the outer VTP-dev-env repo.  Each submodule, VoteTrackerPlus (Python), VTP-web-api (Python), and VTP-web-client (JavaScript) has their own and separate environment.  Visual Studio should be run from within each for each git repo/project separately.
+
+### 4.8) Pushing results
 
 Depending on the goals of the mock election, the local-remote repo can be pushed to the real upstream (github) repository.  However doing so will cause the next setup-vtp-demo for this mock election to pull the now updated github repository.  The local-remote (bare) repository is located in **/opt/VoteTrackerPlus/demo.01/local-upstream/VTP-mock-election.US.17.git**:
 
@@ -357,7 +361,7 @@ New development should use a feature branch directly in this repo.  New Election
 2) Develop code/tests
 3) Maybe update the requirements.txt and environment.yml files
 4) Run "make pylint"
-5) Validate the mock election tests
+5) Validate the mock election tests and/or run a mock election and validate results
 6) Push code
 7) Create a pull request
 
