@@ -25,10 +25,8 @@
 from vtp.core.ballot import Ballot
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
+from vtp.core.operation import Operation
 from vtp.core.tally import Tally
-
-# Local imports
-from .operation import Operation
 
 
 # pylint: disable=too-few-public-methods

@@ -30,13 +30,11 @@ import time
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.election_config import ElectionConfig
+from vtp.core.operation import Operation
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 from vtp.ops.tally_contests_operation import TallyContestsOperation
-
-# Local imports
-from .operation import Operation
 
 
 class RunMockElectionOperation(Operation):

@@ -24,6 +24,7 @@ import operator
 from .common import Globals
 from .contest import Contest
 from .exceptions import TallyException
+from .operation import Operation
 
 
 # pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
@@ -58,7 +59,7 @@ class Tally:
             return [choice[1] for choice in choices]
         return [choice[0] for choice in choices]
 
-    def __init__(self, a_git_cvr: dict, operation_self: dict):
+    def __init__(self, a_git_cvr: dict, operation_self: Operation):
         """Given a contest as parsed from the git log, a.k.a the
         contest digest and CVR json payload, will construct a Tally.
         A tally object can validate and tally a contest.

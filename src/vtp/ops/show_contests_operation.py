@@ -24,10 +24,8 @@ import os
 
 # Project imports
 from vtp.core.election_config import ElectionConfig
+from vtp.core.operation import Operation
 from vtp.core.webapi import WebAPI
-
-# Local imports
-from .operation import Operation
 
 
 class ShowContestsOperation(Operation):

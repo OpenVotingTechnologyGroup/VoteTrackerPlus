@@ -25,7 +25,7 @@ import subprocess
 from contextlib import contextmanager
 
 # local imports
-from vtp.core.common import Globals
+from .common import Globals
 
 # ZZZ - not sure how to best do this - could not make it work.  See:
 # https://stackoverflow.com/questions/6760685/what-is-the-best-way-of-implementing-singleton-in-python

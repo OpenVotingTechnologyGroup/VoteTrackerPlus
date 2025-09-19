@@ -30,9 +30,7 @@ import secrets
 # Project imports
 from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
-
-# Local imports
-from .operation import Operation
+from vtp.core.operation import Operation
 
 
 class SetupVtpDemoOperation(Operation):

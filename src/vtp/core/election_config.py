@@ -27,6 +27,7 @@ import yaml
 # local imports
 from .common import Globals
 from .contest import Contest
+from .operation import Operation
 
 
 # pylint: disable=too-many-instance-attributes
@@ -105,7 +106,7 @@ class ElectionConfig:
     _election_data = None
 
     @staticmethod
-    def configure_election(operation_self: dict, election_data_dir: str):
+    def configure_election(operation_self: Operation, election_data_dir: str):
         """
         Return the existing ElectionData or parse a new one into
         existence.  This is the entrypoint/wrapper into/around the
@@ -204,7 +205,7 @@ class ElectionConfig:
                         f"supported: {bad_keys}"
                     )
 
-    def __init__(self, operation_self: dict, election_data_dir: str = "."):
+    def __init__(self, operation_self: Operation, election_data_dir: str = "."):
         """Constructor for ElectionConfig.  If no election_data_dir is
         supplied, then the CWD _MUST_ be in the current ElectionData
         tree (the election_data_dir) where the election is happening -

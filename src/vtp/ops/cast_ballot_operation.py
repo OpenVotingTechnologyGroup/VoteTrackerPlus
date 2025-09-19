@@ -36,9 +36,7 @@ import pyinputplus
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot, BlankBallot
 from vtp.core.election_config import ElectionConfig
-
-# Local imports
-from .operation import Operation
+from vtp.core.operation import Operation
 
 
 class CastBallotOperation(Operation):
