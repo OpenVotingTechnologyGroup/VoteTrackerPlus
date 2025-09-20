@@ -521,11 +521,11 @@ class ElectionConfig:
         Given a set of active ggos, create a unique ggo name.  For the
         time being, just sort order the ggos UIDs
         """
-        ggo_unique_name = [self.get_node(ggo, "uid") for ggo in active_ggos]
+        ggo_unique_name = [str(self.get_node(ggo, "uid")) for ggo in active_ggos]
         # alphanumerically sort the string
-        ggo_unique_name.sort(key=int)
+        ggo_unique_name.sort(key=str)
         # for now, no error checking ...
-        ggo_unique_name.append(filename)
+        ggo_unique_name.append(str(filename))
         return ",".join(ggo_unique_name)
 
     def gen_blank_ballot_location(self, active_ggos, ballot_subdir, style="json"):
