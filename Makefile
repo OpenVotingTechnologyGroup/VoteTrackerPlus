@@ -102,8 +102,8 @@ pytest:
 	pytest ${TEST_DIR}
 
 # emacs tags
-ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defunct)
-.PHONY: etags
+ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defunct )
+.PHONY: etags ${ETAG_SRCS}
 etags: ${ETAG_SRCS}
 	etags ${ETAG_SRCS}
 

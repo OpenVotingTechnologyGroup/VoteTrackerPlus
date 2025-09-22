@@ -110,8 +110,6 @@ class TallyContestsOperation(Operation):
             #        import pdb; pdb.set_trace()
             try:
                 the_tally.tallyho(contest_batches[contest_batch], track_contests)
-                # Print stuff
-                the_tally.print_results()
             except TallyException as tally_error:
                 self.imprimir(f"[ERROR]: {tally_error}")
                 self.imprimir("Continuing with other contests ...")
