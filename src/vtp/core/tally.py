@@ -99,7 +99,7 @@ class Tally:
         # This is an aggregating copy of the self.winner_order across
         # all the open seats.
         self.multiseat_winners = []
-        # The reset-able stuff
+        # The reset-able stuff - defines more instance variables
         self.multiseat_reset()
         # At this point any contest tallied against this contest must
         # match all the fields with the exception of selection and
@@ -122,19 +122,23 @@ class Tally:
         """
         # Total vote count for this contest.  RCV rounds will not effect
         # this.
-        self.vote_count = 0
+        self.vote_count = 0               # int
         # Ordered list of winners - a list of tuples and not dictionaries.
-        self.winner_order = []
+        self.winner_order = []            # simple list of names
         # Used in both plurality and rcv, but only round 0 is used in
         # plurality.  Note - rcv_round's are an ordered list of tuples
         # as is winner_order.  The code below expects the current round
         # (beginning as an empty list) to exist within the list.
-        self.rcv_round = []
+        self.rcv_round = []               # ordered list of name:votes tuples
         self.rcv_round.append([])
         # Need to keep track of a selections/choices that are no longer
         # viable - key=choice['name'] value=obe round
-        self.obe_choices = {}
-        self.init_selection_counts()
+        self.obe_choices = {}             # key=name, value=knockout round
+        self.init_selection_counts()      # dict of names:votes
+        # And remove winners from selection_counts
+        for key in self.multiseat_winners:
+            if key[0] in self.selection_counts:
+                del self.selection_counts[key[0]]
 
     def get(self, name: str):
         """Simple limited functionality getter"""
@@ -156,8 +160,13 @@ class Tally:
         # Note - keep cloak out of it until proven safe to include
         tally_dict = {
             "contest_name": self.contest["contest_name"],
+            "digest": self.digest,
+            "multiseat_winners": self.multiseat_winners,
+            "obe_choices": self.obe_choices,
+            "rcv_round": self.rcv_round,
+            "selection_counts": self.selection_counts,
             "vote_count": self.vote_count,
-            "winner_order": self.winner_order,
+            "winner_order": self.winner_order,            
         }
         return json.dumps(tally_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -244,6 +253,7 @@ class Tally:
 
         # Step 1: remove self.obe_choices from current round
         working_copy = []
+        # Reminder - a_tuple below is the ('name',<vote count>)
         for a_tuple in self.rcv_round[current_round]:
             if a_tuple[0] not in self.obe_choices:
                 working_copy.append(a_tuple)
@@ -573,6 +583,7 @@ class Tally:
                 # originally coded to attempt to support proportional
                 # RCV where win_by can be smaller and multiple winner
                 # are possible (i think).
+                import pdb; pdb.set_trace()
                 self.winner_order.append((choice, self.selection_counts[choice]))
                 # Need to also add the current winner(s) to the
                 # ignore_choices in case there are multiple open
@@ -642,14 +653,13 @@ class Tally:
                 )
             elif contest["tally"] == "rcv":
                 # parse_and_tally_a_contest will be called once at the
-                # beginning of each RCV open seat.
+                # beginning of each RCV open seat tally.
                 # self.multiseat_winners will be null for the first seat
                 # and will be non null for seats after that. So,
                 # remove all traces of the previous winners before
                 # proceeding with the RCV tally.
-                if seat > 1:
-                    self.safely_remove_previous_winners(
-                        contest, provenance_digest, digest, seat
+                self.safely_remove_previous_winners(
+                    contest, provenance_digest, digest, seat
                     )
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
@@ -705,6 +715,7 @@ class Tally:
         # If plurality, the tally is done
         if self.contest["tally"] == "plurality":
             # record the winner order
+            import pdb; pdb.set_trace()
             self.winner_order.append(self.rcv_round[0])
             return
 
@@ -740,6 +751,7 @@ class Tally:
                 # A winner.  Depending on the win_by (which is a
                 # function of max), there could be multiple
                 # winners in this round.
+                import pdb; pdb.set_trace()
                 self.winner_order.append((choice, self.selection_counts[choice]))
                 # Need to also add the current winner(s) to the
                 # ignore_choices in case there are multiple open
@@ -754,8 +766,25 @@ class Tally:
             # Print final results text
             self.print_final_results()
             return
-        # More RCV rounds are needed.  Loop until we have enough RCV
-        # winners.
+
+        # ZZZ - bad recursion here - for multiseat, the first tallyho
+        # call is calling tallyho a second time and the second call is
+        # effectively running two rounds as it does not return if the
+        # first round produces a winner.  Instead of this design,
+        # tallyho should have a simple loop over the open seats.  If
+        # plurality, the first pass is good enough - just return after
+        # the initial parsing of teh CVR records.  If RCV, if a single
+        # open seat return after that.  Note that it is probably best
+        # to modify the printout.  If multiseat RCV, there is a clear
+        # location for the preamble, the loop code, and a postamble
+        # etc.
+
+        # ZZZ
+        
+        # If there is a winner or winners and if this is a recursive
+        # call, which means that a non-first seat is being filled, need to return 
+        if self.winner_order:
+            return
 
         # Safely determine the next set of last_place_names and
         # execute a RCV round. Note that all zero vote choices
@@ -783,9 +812,10 @@ class Tally:
         # open_position has been filled. Reset what needs to be
         # reset to fill another position and call tallyho again.
 
-        # Reset state needed for multiseat but safe the length of
+        # Reset state needed for multiseat but save the length of
         # winner_order so to be able to correctly bump next seat
         next_seat = seat + len(self.winner_order)
+        # And reset the other state
         self.multiseat_reset()
         # Attempt to fill the next open seat
         self.tallyho(contest_batch, checks, next_seat)
@@ -794,7 +824,10 @@ class Tally:
         return
 
     def print_seat_results(self, winners, seat):
-        """WIll print the results of the current seat winner"""
+        """
+        Will print the results of the current seat winner.  Not called
+        when there is only one open seat
+        """
         self.operation_self.imprimir(
             f"Results for the {Globals.make_ordinal(seat)} open seat of "
             f"contest {self.contest['contest_name']} "
@@ -804,25 +837,32 @@ class Tally:
         for result in self.rcv_round[-2]:
             self.operation_self.imprimir(f"  {result}")
         self.operation_self.imprimir(
-            f"Removing {winners} for determining the next winner for seat "
-            f"{seat + 1} of {self.defaults['open_positions']}\n"
-            "Running next tally ...",
+            f"Removing the winner(s), {', '.join([item[0] for item in winners])}, "
+            "from consideration for the next open seat "
+            f"(seat {seat + 1} of {self.defaults['open_positions']})\n"
+            "Running next open seat tally ...",
             0,
         )
+        return
 
     def print_final_results(self):
         """Will print the results of the tally"""
+        # import pdb; pdb.set_trace()
         self.operation_self.imprimir(
-            f"Final results for contest {self.contest['contest_name']} "
+            f"Final RCV round results for contest {self.contest['contest_name']} "
             f"(uid={self.contest['uid']}):",
             0,
         )
-        #        import pdb; pdb.set_trace()
         # Note - better to print the last self.rcv_round than
         # self.winner_order since the former is a full count across all
         # choices while the latter is a partial list
         for result in self.rcv_round[-2]:
             self.operation_self.imprimir(f"  {result}")
-
+        # When there is only one open seat
+        self.operation_self.imprimir(
+            f"Winner(s): {', '.join([item[0] for item in self.multiseat_winners])}",
+            0,
+        )
+        return
 
 # EOF
