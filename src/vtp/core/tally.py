@@ -191,15 +191,13 @@ class Tally:
                         f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
                         0,
                     )
-                elif self.operation_self.verbosity == 5:
+                elif self.operation_self.verbosity == 4:
                     self.operation_self.imprimir(
                         f"counted {digest} as vote {vote_count}: selection={selection}"
                     )
             else:
-                if provenance_digest:
-                    self.operation_self.imprimir(
-                        f"No-vote {provenance_digest}: BLANK", 0
-                    )
+                if provenance_digest or self.operation_self.verbosity == 4:
+                    self.operation_self.imprimir(f"No-vote {digest}: BLANK", 0)
 
     # ZZZ delete this
     # def prune_this(self, selection: str):
@@ -210,7 +208,11 @@ class Tally:
     # ZZZ
 
     def tally_a_rcv_contest(
-        self, contest: dict, provenance_digest: str, vote_count: int
+        self,
+        contest: dict,
+        provenance_digest: str,
+        vote_count: int,
+        digest: str,
     ):
         """RCV tally"""
         # Note - the voter can still leave a RCV contest blank
@@ -227,10 +229,14 @@ class Tally:
                     f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
                     0,
                 )
+            elif self.operation_self.verbosity == 4:
+                self.operation_self.imprimir(
+                    f"counted {digest} as vote {vote_count}: selection={selection}"
+                )
         else:
             # A blank contest
-            if provenance_digest:
-                self.operation_self.imprimir(f"No vote {provenance_digest}: BLANK", 0)
+            if provenance_digest or self.operation_self.verbosity == 4:
+                self.operation_self.imprimir(f"No vote {digest}: BLANK", 0)
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -292,7 +298,7 @@ class Tally:
                 contest["selection"].remove(selection)
 
     def safely_remove_previous_winners(
-        self, contest: dict, provenance_digest: str, digest: str, seat: int
+        self, contest: dict, provenance_digest: str, digest: str
     ):
         """For the specified contest, will remove all
         self.multiseat_winners from the selection, potentially printing
@@ -300,15 +306,18 @@ class Tally:
         """
         a_copy = contest["selection"].copy()
         winners = [item[0] for item in self.multiseat_winners]
+        removed = 0
         for selection in a_copy:
             if selection in winners and selection in contest["selection"]:
                 contest["selection"].remove(selection)
+                removed += 1
                 if provenance_digest == digest or self.operation_self.verbosity >= 4:
                     self.operation_self.imprimir(
-                        f"RCV: {digest} (contest={contest['contest_name']}) is already a winner "
-                        f"removing ({selection}) for open seat {Globals.make_ordinal(seat)}",
+                        f"RCV: {digest} (contest={contest['contest_name']}) "
+                        f"skipping existing winner ({selection}) for next open seat tally",
                         0,
                     )
+        return removed
 
     def restore_proper_rcv_round_ordering(self, this_round: int):
         """Restore the 'proper' ordering of the losers in the current
@@ -602,7 +611,7 @@ class Tally:
         )
         return
 
-    def parse_and_tally_a_contest(self, contest_batch: list, checks: list, seat: int):
+    def parse_and_tally_a_contest(self, contest_batch: list, checks: list):
         """
         Will parse all the contests validating each entry.  Choices
         that are in the self.multiseat_winners dict will be skipped -
@@ -610,6 +619,7 @@ class Tally:
         """
         errors = {}
         vote_count = 0
+        removed = 0
         for a_git_cvr in contest_batch:
             vote_count += 1
             contest = a_git_cvr["contestCVR"]
@@ -657,12 +667,12 @@ class Tally:
                 # and will be non null for seats after that. So,
                 # remove all traces of the previous winners before
                 # proceeding with the RCV tally.
-                self.safely_remove_previous_winners(
-                    contest, provenance_digest, digest, seat
+                removed += self.safely_remove_previous_winners(
+                    contest, provenance_digest, digest
                 )
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
-                self.tally_a_rcv_contest(contest, provenance_digest, vote_count)
+                self.tally_a_rcv_contest(contest, provenance_digest, vote_count, digest)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will
@@ -673,12 +683,17 @@ class Tally:
                     f"the specified tally ({contest['tally']}) is not yet implemented"
                 )
 
+        self.operation_self.imprimir(
+            f"RCV: skipped a total of {removed} votes for current winners", 0
+        )
+
         # Will the potential CVR errors found, report them all
         if errors:
             raise TallyException(
                 "The following CVRs have structural errors:" f"{errors}"
             )
 
+    # pylint: disable=too-many-branches
     def tallyho(
         self,
         contest_batch: list,
@@ -709,7 +724,7 @@ class Tally:
                 )
 
             # parse all the CVRs and create the first round of tallys
-            self.parse_and_tally_a_contest(contest_batch, checks, seat)
+            self.parse_and_tally_a_contest(contest_batch, checks)
             # For all tallies order what has been counted so far (a tuple)
             self.rcv_round[0] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True
@@ -770,8 +785,8 @@ class Tally:
             # winners than remaining open_positions
 
             # If there is a winner, either go to next open seat or return if done
-            if (self.winner_order):
-                if (len(self.winner_order) >= int(self.defaults["open_positions"])):
+            if self.winner_order:
+                if len(self.winner_order) >= int(self.defaults["open_positions"]):
                     # Print final results text
                     self.print_final_results()
                     return
