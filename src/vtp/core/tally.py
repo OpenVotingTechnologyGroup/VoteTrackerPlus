@@ -307,14 +307,15 @@ class Tally:
         a_copy = contest["selection"].copy()
         winners = [item[0] for item in self.multiseat_winners]
         removed = 0
-        for selection in a_copy:
+        for rank, selection in enumerate(a_copy):
             if selection in winners and selection in contest["selection"]:
                 contest["selection"].remove(selection)
                 removed += 1
                 if provenance_digest == digest or self.operation_self.verbosity >= 4:
                     self.operation_self.imprimir(
                         f"RCV: {digest} (contest={contest['contest_name']}) "
-                        f"skipping existing winner ({selection}) for next open seat tally",
+                        f"skipping existing winner ({selection}, rank={rank+1}) "
+                        "for next open seat tally",
                         0,
                     )
         return removed
