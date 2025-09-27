@@ -306,11 +306,9 @@ class Tally:
         """
         a_copy = contest["selection"].copy()
         winners = [item[0] for item in self.multiseat_winners]
-        removed = 0
         for rank, selection in enumerate(a_copy):
             if selection in winners and selection in contest["selection"]:
                 contest["selection"].remove(selection)
-                removed += 1
                 if provenance_digest == digest or self.operation_self.verbosity >= 4:
                     self.operation_self.imprimir(
                         f"RCV: {digest} (contest={contest['contest_name']}) "
@@ -318,7 +316,6 @@ class Tally:
                         "for next open seat tally",
                         0,
                     )
-        return removed
 
     def restore_proper_rcv_round_ordering(self, this_round: int):
         """Restore the 'proper' ordering of the losers in the current
@@ -581,7 +578,7 @@ class Tally:
 
         #
         total_current_vote_count = self.get_total_vote_count(this_round)
-        self.operation_self.imprimir(f"Total vote count: {total_current_vote_count}", 0)
+        self.operation_self.imprimir(f"Total non-blank vote count: {total_current_vote_count}", 0)
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (
@@ -620,7 +617,6 @@ class Tally:
         """
         errors = {}
         vote_count = 0
-        removed = 0
         for a_git_cvr in contest_batch:
             vote_count += 1
             contest = a_git_cvr["contestCVR"]
@@ -668,9 +664,7 @@ class Tally:
                 # and will be non null for seats after that. So,
                 # remove all traces of the previous winners before
                 # proceeding with the RCV tally.
-                removed += self.safely_remove_previous_winners(
-                    contest, provenance_digest, digest
-                )
+                self.safely_remove_previous_winners(contest, provenance_digest, digest)
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
                 self.tally_a_rcv_contest(contest, provenance_digest, vote_count, digest)
@@ -683,10 +677,6 @@ class Tally:
                 raise NotImplementedError(
                     f"the specified tally ({contest['tally']}) is not yet implemented"
                 )
-
-        self.operation_self.imprimir(
-            f"RCV: skipped a total of {removed} votes for current winners", 0
-        )
 
         # Will the potential CVR errors found, report them all
         if errors:
@@ -721,7 +711,7 @@ class Tally:
                 else:
                     self.operation_self.imprimir_formatting("horizontal_line")
                 self.operation_self.imprimir(
-                    f"RCV: round 0, {Globals.make_ordinal(seat)} seat", 0
+                    f"RCV: initial tally, {Globals.make_ordinal(seat)} seat", 0
                 )
 
             # parse all the CVRs and create the first round of tallys
@@ -756,7 +746,7 @@ class Tally:
             # Get the correct current total vote count for this round
             total_current_vote_count = self.get_total_vote_count(0)
             self.operation_self.imprimir(
-                f"Total vote count: {total_current_vote_count}", 0
+                f"Total non-blank vote count: {total_current_vote_count}", 0
             )
             # When multiseat RCV, print multiseat RCV header
             if int(self.defaults["open_positions"]) > 1:
