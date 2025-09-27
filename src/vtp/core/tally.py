@@ -444,9 +444,11 @@ class Tally:
         """
 
         # Loop over CVRs
+        total_votes = 0
         for vote_count, uid in enumerate(contest_batch):
             contest = uid["contestCVR"]
             digest = uid["digest"]
+            total_votes += 1
             if digest in checks:
                 # Note - to manually inspect a specific RCV vote,
                 # add the 'if digest == "...": import pdb; pdb.set_trace()' here
@@ -492,6 +494,7 @@ class Tally:
                                 f"pop and drop ({last_place_name} -> BLANK)",
                                 0,
                             )
+        return total_votes
 
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     def handle_another_rcv_round(
@@ -532,7 +535,7 @@ class Tally:
             return
 
         # Loop over contest_batch and actually re-cast votes
-        self.recast_votes(last_place_names, contest_batch, checks)
+        total_votes = self.recast_votes(last_place_names, contest_batch, checks)
         # Order the winners of this round.  This is a tuple, not a
         # list or dict.  Note - the rcv round losers should not be
         # re-ordered as there is value to retaining that order
@@ -578,7 +581,10 @@ class Tally:
 
         #
         total_current_vote_count = self.get_total_vote_count(this_round)
-        self.operation_self.imprimir(f"Total non-blank vote count: {total_current_vote_count}", 0)
+        self.operation_self.imprimir(
+            f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
+            0,
+        )
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
             if (
@@ -683,6 +689,7 @@ class Tally:
             raise TallyException(
                 "The following CVRs have structural errors:" f"{errors}"
             )
+        return vote_count
 
     # pylint: disable=too-many-branches
     def tallyho(
@@ -715,7 +722,7 @@ class Tally:
                 )
 
             # parse all the CVRs and create the first round of tallys
-            self.parse_and_tally_a_contest(contest_batch, checks)
+            total_votes = self.parse_and_tally_a_contest(contest_batch, checks)
             # For all tallies order what has been counted so far (a tuple)
             self.rcv_round[0] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True
@@ -746,7 +753,8 @@ class Tally:
             # Get the correct current total vote count for this round
             total_current_vote_count = self.get_total_vote_count(0)
             self.operation_self.imprimir(
-                f"Total non-blank vote count: {total_current_vote_count}", 0
+                f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
+                0,
             )
             # When multiseat RCV, print multiseat RCV header
             if int(self.defaults["open_positions"]) > 1:
