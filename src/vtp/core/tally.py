@@ -75,45 +75,51 @@ class Tally:
         """
         #        import pdb; pdb.set_trace()
         self.operation_self = operation_self
-        self.digest = a_git_cvr["digest"]
-        self.contest = a_git_cvr["contestCVR"]
-        Contest.check_contest_blob_syntax(self.contest, digest=self.digest)
+        self.reference_contest = a_git_cvr["contestCVR"]
+        self.reference_digest = a_git_cvr["digest"]
+        Contest.check_contest_blob_syntax(
+            self.reference_contest, digest=self.reference_digest
+        )
         # Something to hold the actual tallies.  During RCV rounds these
         # will change with last place finishers being decremented to 0.
         self.init_selection_counts()
-        # ZZZ - cache these values
-        self.defaults = {
-            "max_selections": self.contest["max_selections"],
-            "open_positions": self.contest["open_positions"],
-        }
         # For sequential RCV tallies the default win_by will always be
         # 0.5. For proportional RCV it is a function of
         # open_positions. The if clause is only here for back
         # compatbility with older mock electionData sets.
-        if "win_by" not in self.contest:
-            self.defaults["win_by"] = 0.5
-            # self.defaults["win_by"] = 1.0 / (int(self.contest["open_positions"]) + 1.0)
+        if "win_by" not in self.reference_contest:
+            self.reference_contest["win_by"] = 0.5
+            # self.reference_contest["win_by"] =
+            # 1.0 / (int(self.reference_contest["open_positions"]) + 1.0)
         else:
-            self.defaults["win_by"] = self.contest["win_by"]
+            self.reference_contest["win_by"] = self.reference_contest["win_by"]
         # Need to keep track of current winners for sequential RCV.
         # This is an aggregating copy of the self.winner_order across
         # all the open seats.
         self.multiseat_winners = []
         # The reset-able stuff - defines more instance variables
         self.multiseat_reset()
+        # Need a backup of contest["selection'] to restore when
+        # tallying multiseat sequential RCV contests
+        self.selection_backup = {}
         # At this point any contest tallied against this contest must
         # match all the fields with the exception of selection and
         # write-in, but that check is done in tallyho below.
-        if not (self.contest["tally"] == "plurality" or self.contest["tally"] == "rcv"):
+        if not (
+            self.reference_contest["tally"] == "plurality"
+            or self.reference_contest["tally"] == "rcv"
+        ):
             raise NotImplementedError(
-                f"the specified tally ({self.contest['tally']}) is not yet implemented"
+                f"the specified tally ({self.reference_contest['tally']}) is not yet implemented"
             )
 
     def init_selection_counts(self):
         """Will initialize the selection_counts to 0"""
         self.selection_counts = {
             choice: 0
-            for choice in Contest.get_choices_from_contest(self.contest["choices"])
+            for choice in Contest.get_choices_from_contest(
+                self.reference_contest["choices"]
+            )
         }
 
     def multiseat_reset(self):
@@ -135,6 +141,9 @@ class Tally:
         # viable - key=choice['name'] value=obe round
         self.obe_choices = {}  # key=name, value=knockout round
         self.init_selection_counts()  # dict of names:votes
+        # Something to hold the actual tallies.  During RCV rounds these
+        # will change with last place finishers being decremented to 0.
+        self.init_selection_counts()
         # And remove winners from selection_counts
         for key in self.multiseat_winners:
             if key[0] in self.selection_counts:
@@ -143,10 +152,12 @@ class Tally:
     def get(self, name: str):
         """Simple limited functionality getter"""
         if name in ["max_selections", "open_positions", "win_by"]:
-            return self.defaults[name]
+            return self.reference_contest[name]
+        if name == "digest":
+            return self.reference_digest
+        if name == "contest":
+            return self.reference_contest
         if name in [
-            "contest",
-            "digest",
             "rcv_round",
             "selection_counts",
             "vote_count",
@@ -159,8 +170,8 @@ class Tally:
         """Return the Tally in a partially print-able json string - careful ..."""
         # Note - keep cloak out of it until proven safe to include
         tally_dict = {
-            "contest_name": self.contest["contest_name"],
-            "digest": self.digest,
+            "contest_name": self.reference_contest["contest_name"],
+            "digest": self.reference_digest,
             "multiseat_winners": self.multiseat_winners,
             "obe_choices": self.obe_choices,
             "rcv_round": self.rcv_round,
@@ -178,7 +189,7 @@ class Tally:
         digest: str,
     ):
         """plurality tally"""
-        for count in range(self.defaults["max_selections"]):
+        for count in range(self.reference_contest["max_selections"]):
             if 0 <= count < len(contest["selection"]):
                 # yes this can be one line, but the reader may
                 # be interested in verifying the explicit
@@ -283,7 +294,7 @@ class Tally:
     def safely_remove_obe_selections(self, contest: dict):
         """For the specified contest, will 'pop' the current first place
         selection.  If the next selection is already a loser, will pop
-        that as well.  self.contest['selection'] may or may not have any
+        that as well.  self.reference_contest['selection'] may or may not have any
         choices left (it can be empty, have one choice, or multiple
         choices left).
 
@@ -312,8 +323,8 @@ class Tally:
                 if provenance_digest == digest or self.operation_self.verbosity >= 4:
                     self.operation_self.imprimir(
                         f"RCV: {digest} (contest={contest['contest_name']}) "
-                        f"skipping existing winner ({selection}, rank={rank+1}) "
-                        "for next open seat tally",
+                        f"note - {selection}, rank={rank+1}, "
+                        "is already a winner",
                         0,
                     )
 
@@ -445,9 +456,9 @@ class Tally:
 
         # Loop over CVRs
         total_votes = 0
-        for vote_count, uid in enumerate(contest_batch):
-            contest = uid["contestCVR"]
-            digest = uid["digest"]
+        for vote_count, a_git_cvr in enumerate(contest_batch):
+            contest = a_git_cvr["contestCVR"]
+            digest = a_git_cvr["digest"]
             total_votes += 1
             if digest in checks:
                 # Note - to manually inspect a specific RCV vote,
@@ -589,7 +600,7 @@ class Tally:
             # Note the test is '>' and NOT '>='
             if (
                 float(self.selection_counts[choice]) / float(total_current_vote_count)
-            ) > float(self.defaults["win_by"]):
+            ) > float(self.reference_contest["win_by"]):
                 # A winner. Note for sequencial RCV contests, the
                 # win_by is always > 0.5, so it is not possible to
                 # have multiple winners here. However, this was
@@ -615,6 +626,14 @@ class Tally:
         )
         return
 
+    def add_digest_error(self, errors: dict, digest: str, err_message: str):
+        """Will create/append a digest error msg"""
+        if digest not in errors:
+            errors[digest] = [err_message]
+        else:
+            errors[digest].append(err_message)
+
+    # pylint: disable=too-many-branches
     def parse_and_tally_a_contest(self, contest_batch: list, checks: list):
         """
         Will parse all the contests validating each entry.  Choices
@@ -627,10 +646,19 @@ class Tally:
             vote_count += 1
             contest = a_git_cvr["contestCVR"]
             digest = a_git_cvr["digest"]
-            Contest.check_contest_blob_syntax(contest, digest=digest)
             # Maybe print an provenance log for the tally of this contest
             provenance_digest = digest if digest in checks else ""
-            # Validate the values that should be the same as self
+            # Either save or restore the original contest for
+            # restoration if needed
+            if digest in self.selection_backup:
+                contest["selection"] = self.selection_backup[digest].copy()
+                self.safely_remove_previous_winners(contest, provenance_digest, digest)
+            else:
+                self.selection_backup[digest] = contest["selection"].copy()
+            # Check contest syntax
+            Contest.check_contest_blob_syntax(contest, digest=digest)
+            # Validate the values that should be the same as
+            # self.reference_contest (win_by is optional)
             for field in [
                 "choices",
                 "tally",
@@ -642,17 +670,22 @@ class Tally:
                 "contest_type",
                 "election_upstream_remote",
             ]:
-                if field in self.contest:
-                    if self.contest[field] != contest[field]:
-                        errors[digest].append(
-                            f"{field} field does not match: "
-                            f"{self.contest[field]} != {contest[field]}"
+                if field != "win_by":
+                    if field in self.reference_contest:
+                        if self.reference_contest[field] != contest[field]:
+                            self.add_digest_error(
+                                errors,
+                                digest,
+                                f"{field} field does not match: "
+                                f"{self.reference_contest[field]} != {contest[field]}",
+                            )
+                    elif field in contest:
+                        self.add_digest_error(
+                            errors,
+                            digest,
+                            f"{field} field is not present in Tally object but "
+                            "is present in digest",
                         )
-                elif field in contest:
-                    errors[digest].append(
-                        f"{field} field is not present in Tally object but "
-                        "is present in digest"
-                    )
             # Tally the contest - this is just the first pass of a
             # tally.  It just so happens that with plurality tallies
             # the tally can be completed with a single pass over
@@ -707,9 +740,9 @@ class Tally:
         # seats there is only one iteration - a check will exit the
         # loop. For RCV, all the following rounds are handled by
         # handle_another_rcv_round
-        for seat in range(1, int(self.defaults["open_positions"]) + 1):
+        for seat in range(1, int(self.reference_contest["open_positions"]) + 1):
             # Prologue header
-            if self.contest["tally"] == "plurality":
+            if self.reference_contest["tally"] == "plurality":
                 self.operation_self.imprimir("Plurality (one round)", 0)
             else:
                 self.operation_self.imprimir_formatting("empty_line")
@@ -729,7 +762,7 @@ class Tally:
             )
             self.rcv_round.append([])
             # If plurality, the tally is done
-            if self.contest["tally"] == "plurality":
+            if self.reference_contest["tally"] == "plurality":
                 # record the winner order, print, and return
                 self.winner_order.append(self.rcv_round[0])
                 self.print_final_results()
@@ -757,7 +790,7 @@ class Tally:
                 0,
             )
             # When multiseat RCV, print multiseat RCV header
-            if int(self.defaults["open_positions"]) > 1:
+            if int(self.reference_contest["open_positions"]) > 1:
                 self.operation_self.imprimir(
                     f"Running sequential RCV for the {Globals.make_ordinal(seat)}"
                     " open seat"
@@ -768,7 +801,7 @@ class Tally:
                 if (
                     float(self.selection_counts[choice])
                     / float(total_current_vote_count)
-                ) > float(self.defaults["win_by"]):
+                ) > float(self.reference_contest["win_by"]):
                     # A winner.  Depending on the win_by (which is a
                     # function of max), there could be multiple
                     # winners in this round.
@@ -785,7 +818,9 @@ class Tally:
 
             # If there is a winner, either go to next open seat or return if done
             if self.winner_order:
-                if len(self.winner_order) >= int(self.defaults["open_positions"]):
+                if len(self.winner_order) >= int(
+                    self.reference_contest["open_positions"]
+                ):
                     # Print final results text
                     self.print_final_results()
                     return
@@ -809,7 +844,7 @@ class Tally:
             )
 
             # If this is the last open_position, need to exit now.
-            if seat >= int(self.defaults["open_positions"]):
+            if seat >= int(self.reference_contest["open_positions"]):
                 # Print final results text
                 self.print_final_results()
                 return
@@ -838,8 +873,8 @@ class Tally:
         """
         self.operation_self.imprimir(
             f"Results for the {Globals.make_ordinal(seat)} open seat of "
-            f"contest {self.contest['contest_name']} "
-            f"(uid={self.contest['uid']}):",
+            f"contest {self.reference_contest['contest_name']} "
+            f"(uid={self.reference_contest['uid']}):",
             0,
         )
         for result in self.rcv_round[-2]:
@@ -847,7 +882,7 @@ class Tally:
         self.operation_self.imprimir(
             f"Removing the winner(s), {', '.join([item[0] for item in winners])}, "
             "from consideration for the next open seat "
-            f"(seat {seat + 1} of {self.defaults['open_positions']})\n"
+            f"(seat {seat + 1} of {self.reference_contest['open_positions']})\n"
             "Running next open seat tally ...",
             0,
         )
@@ -856,8 +891,8 @@ class Tally:
         """Will print the results of the tally"""
         # import pdb; pdb.set_trace()
         self.operation_self.imprimir(
-            f"Final RCV round results for contest {self.contest['contest_name']} "
-            f"(uid={self.contest['uid']}):",
+            f"Final RCV round results for contest {self.reference_contest['contest_name']} "
+            f"(uid={self.reference_contest['uid']}):",
             0,
         )
         # Note - better to print the last self.rcv_round than
