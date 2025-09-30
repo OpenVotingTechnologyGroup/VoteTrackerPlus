@@ -91,8 +91,6 @@ class Tally:
             self.reference_contest["win_by"] = 0.5
             # self.reference_contest["win_by"] =
             # 1.0 / (int(self.reference_contest["open_positions"]) + 1.0)
-        else:
-            self.reference_contest["win_by"] = self.reference_contest["win_by"]
         # Need to keep track of current winners for sequential RCV.
         # This is an aggregating copy of the self.winner_order across
         # all the open seats.
@@ -209,14 +207,6 @@ class Tally:
             else:
                 if provenance_digest or self.operation_self.verbosity == 4:
                     self.operation_self.imprimir(f"No-vote {digest}: BLANK", 0)
-
-    # ZZZ delete this
-    # def prune_this(self, selection: str):
-    #     offset, name = re.split(r":\s+", selection, 1)
-    #     if offset and name and offset.isdigit():
-    #         return name
-    #     return selection
-    # ZZZ
 
     def tally_a_rcv_contest(
         self,
