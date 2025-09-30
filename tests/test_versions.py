@@ -44,7 +44,7 @@ def fixture_main_street_address():
 @pytest.fixture(name="election_data_dir")
 def fixture_election_data_dir():
     """Returns the local (to this VoteTrackerPlus repo) ElectionData dir"""
-    return "../VTP-mock-election.US.17"
+    return "../VTP-mock-election.sRCV.1"
 
 
 ################
@@ -87,15 +87,15 @@ def test_electiondata(election_data_dir, verbosity=3, printonly=False):
     assert os.path.basename(the_election_config.get("git_rootdir")) == os.path.basename(
         election_data_dir
     )
-    # in VTP-mock-election.US.17 there are 6 config files to parse
-    assert len(the_election_config.parsed_configs) == 6
-    # ... the third node has the same uid
+    # in VTP-mock-election.sRCV.1 there are 3 config files to parse
+    assert len(the_election_config.parsed_configs) == 3
+    # ... the third node has the uid
     assert (
-        the_election_config.get_node(the_election_config.get_dag("topo")[3], "uid")
-        == "003"
+        the_election_config.get_node(the_election_config.get_dag("topo")[1], "uid")
+        == "001"
     )
     # ... and is a town
     assert (
-        the_election_config.get_node(the_election_config.get_dag("topo")[3], "kind")
+        the_election_config.get_node(the_election_config.get_dag("topo")[2], "kind")
         == "towns"
     )

@@ -40,11 +40,11 @@ from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.common import Globals
 from vtp.core.election_config import ElectionConfig
+from vtp.core.operation import Operation
 from vtp.core.webapi import WebAPI
 from vtp.ops.merge_contests_operation import MergeContestsOperation
 
-# Local imports
-from .operation import Operation
+# pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
 
 
 class AcceptBallotOperation(Operation):

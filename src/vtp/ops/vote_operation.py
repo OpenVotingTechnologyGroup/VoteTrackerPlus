@@ -25,11 +25,9 @@
 from vtp.core.address import Address
 from vtp.core.ballot import Ballot
 from vtp.core.election_config import ElectionConfig
+from vtp.core.operation import Operation
 from vtp.ops.accept_ballot_operation import AcceptBallotOperation
 from vtp.ops.cast_ballot_operation import CastBallotOperation
-
-# Local imports
-from .operation import Operation
 
 
 # pylint: disable=too-few-public-methods

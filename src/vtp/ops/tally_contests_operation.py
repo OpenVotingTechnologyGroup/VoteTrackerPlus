@@ -25,10 +25,8 @@
 from vtp.core.ballot import Ballot
 from vtp.core.election_config import ElectionConfig
 from vtp.core.exceptions import TallyException
+from vtp.core.operation import Operation
 from vtp.core.tally import Tally
-
-# Local imports
-from .operation import Operation
 
 
 # pylint: disable=too-few-public-methods
@@ -105,15 +103,13 @@ class TallyContestsOperation(Operation):
                 f"for contest ({contest_batches[contest_batch][0]['contestCVR']['contest_name']}) "
                 f"uid={contest_batches[contest_batch][0]['contestCVR']['uid']}, "
                 f"tally={contest_batches[contest_batch][0]['contestCVR']['tally']}, "
-                f"max_selections={the_tally.get('max_selections')}, "
-                f"win_by>{the_tally.get('win_by')}"
+                f"open_positions={the_tally.get('open_positions')}, "
+                f"max_selections={the_tally.get('max_selections')} "
             )
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()
             try:
                 the_tally.tallyho(contest_batches[contest_batch], track_contests)
-                # Print stuff
-                the_tally.print_results()
             except TallyException as tally_error:
                 self.imprimir(f"[ERROR]: {tally_error}")
                 self.imprimir("Continuing with other contests ...")

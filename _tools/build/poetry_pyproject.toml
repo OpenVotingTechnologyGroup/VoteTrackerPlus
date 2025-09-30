@@ -18,9 +18,9 @@ packages = [
 deepdiff = "^8.5.0"
 networkx = "^3.5"
 pyinputplus = "^0.2.12"
-python = "^3.12"
+python = "^3.13"
 pyyaml = "^6.0.1"
-qrcode = "^7.4.2"
+qrcode = "^8.2"
 poetry-plugin-export = "^1.7.1"
 
 [tool.poetry.group.dev.dependencies]

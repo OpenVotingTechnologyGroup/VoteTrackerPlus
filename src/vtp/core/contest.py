@@ -40,15 +40,47 @@ class Contest:
     selection logic was moved from the Ballot class to this class
     while changing the Ballot class to _always_ create Contest objects
     when it encounters a contest.
+
+    Note - the contest is a dict with the following set-able keys:
+    - choices: a list of choices, each choice is either a string or a dict
+      with the keys 'name' and optionally 'party' and 'ticket_names'
+    - tally: the tally type, either 'plurality' or 'rcv'
+    - win_by: currently defunct (was setable).  Support for setting this can
+      re-appear when support for simple contests with non simple majority (say
+      2/3 majority) winners are supported.  So for plurality it is ignored.  For
+      RCV it is set dynamically per open_position round as a function of open_positions.
+    - max_selections: the maximum number of selections a voter may select.  Defaults
+      to 1 for plurality and the number of choices for RCV.
+    - open_positions: number of open positions.  Defaults to 1 for both plurality and RCV.
+      This is basically the number of open seats.  When tally=RCV and open_positions=1,
+      RCV more or less becomes STV.
+    - write_in: a boolean indicating if write-in votes are allowed, defaults to False
+    - description: a optional string describing the contest
+    - contest_type: the type of contest, either 'candidate', 'ticket', or 'question'
+    - ticket_titles: a list of titles for the tickets, only used in ticket contests
+    - election_upstream_remote: a string indicating the upstream remote for the election,
+      used for voter UX
+    - contest_name: a string indicating the name of the contest
+    - ggo: a string indicating the GGO (General Governmental Organization) for the contest
+
+    The contest also has the following keys that are not part of the
+    contest dict but are used for internal tracking and management:
+    - uid: a unique identifier for the contest, automatically generated.
+    - selection: a list of selections made by the voter, can be empty.
+    - cast_branch: a string indicating the branch of the cast vote, used for tracking.
+    - name: a string indicating the name of the contest.
     """
 
     # Legitimate Contest keys.  Note 'selection', 'uid', 'cloak', and
-    # 'name' are not legitimate keys for blank ballots
+    # 'name' are not legitimate keys for blank ballots.  Unless
+    # otherwise explicitly stated, all the fields coming from the yaml
+    # data are strings and not integers.
     _config_keys = [
         "choices",
         "tally",
-        "win_by",
+        "win_by",  # when auto generated a float
         "max_selections",
+        "open_positions",
         "write_in",
         "description",
         "contest_type",
@@ -206,20 +238,38 @@ class Contest:
                     a_contest_blob["max_selections"] = 1
                 else:
                     a_contest_blob["max_selections"] = len(a_contest_blob["choices"])
+            # open_positions cannot be 0 and must be defined
+            if "open_positions" not in a_contest_blob:
+                raise KeyError(
+                    "open_positions must be defined as a non zero postive integer - "
+                    "it is not defined"
+                )
+            if not a_contest_blob["open_positions"].isdigit():
+                raise KeyError(
+                    "open_positions must be a non zero postive integer "
+                    f"({a_contest_blob['open_positions']})"
+                )
+            open_positions = int(a_contest_blob["open_positions"])
+            if open_positions < 1:
+                raise KeyError(
+                    "open_positions must be an integer greater than zero "
+                    f"({a_contest_blob['open_positions']})"
+                )
             # If win_by is not set
             if "win_by" not in a_contest_blob:
-                # ZZZ - it is unclear what win_by may actually want to
-                # mean from a UX POV.  For now, simple set it to "max"
-                # for plurality and "0.5" for IRV(1), which implies
-                # the winning plurality choice and the first IRV(1)
-                # candidate past the 50% mark.  Note - a value of
-                # "max" in IRV(1) could mean after all rounds TBD.
-                if a_contest_blob["contest_type"] == "plurality":
-                    a_contest_blob["win_by"] = "max"
-                else:
-                    # Note - RCV tallies are technically IRV(1)
-                    # tallies currently
-                    a_contest_blob["win_by"] = "0.5"
+                # Note1: it is possible to set win_by in the
+                # electionData when the contest is a simple contest
+                # (non RCV).  When plurality it is a majority
+                # regardless.  For RCV it is derived as a Droop quota:
+                # GREATER than total votes/(k +1) where k =
+                # open_positions.  win_by is just the percentage, not
+                # the actual necessary vote count to be a winner.
+                a_contest_blob["win_by"] = 1.0 / (open_positions + 1.0)
+            elif not a_contest_blob["plurality"]:
+                raise KeyError(
+                    "setting win_by in a non plurality contest is not supported - "
+                    "it does make sense"
+                )
             # Add an empty selection if it does not exist
             if "selection" not in a_contest_blob:
                 a_contest_blob["selection"] = []

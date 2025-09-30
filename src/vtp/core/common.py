@@ -100,7 +100,7 @@ class Globals:
         # The election date-time for all ElectionData commits
         "ELECTION_DATETIME": "2024-11-05T12:00:00",
         # The arbitrary election data string
-        "ELECTION_UPSTREAM_REMOTE": "https://github.com/TrustTheVote-Project/",
+        "ELECTION_UPSTREAM_REMOTE": "https://github.com/OpenVotingTechnologyGroup/",
     }
 
     @staticmethod
@@ -122,3 +122,17 @@ class Globals:
             raise ValueError(
                 f"The provided --election_data value ({election_data_dir}) does not exist"
             )
+
+    @staticmethod
+    def make_ordinal(n: int) -> str:
+        """
+        Convert an integer into its ordinal representation.
+        e.g. 1 -> 1st, 2 -> 2nd, 3 -> 3rd, 4 -> 4th, 11 -> 11th
+        """
+        if 11 <= (n % 100) <= 13:
+            suffix = "th"
+        else:
+            suffix = ["th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"][
+                n % 10
+            ]
+        return str(n) + suffix

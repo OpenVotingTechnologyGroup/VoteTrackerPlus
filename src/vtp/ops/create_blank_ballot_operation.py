@@ -26,9 +26,7 @@ import pprint
 from vtp.core.address import Address
 from vtp.core.ballot import BlankBallot
 from vtp.core.election_config import ElectionConfig
-
-# Local imports
-from .operation import Operation
+from vtp.core.operation import Operation
 
 
 # pylint: disable=too-few-public-methods

@@ -27,9 +27,7 @@ import re
 from vtp.core.ballot import Ballot
 from vtp.core.contest import Contest
 from vtp.core.election_config import ElectionConfig
-
-# Local imports
-from .operation import Operation
+from vtp.core.operation import Operation
 
 
 class VerifyBallotReceiptOperation(Operation):

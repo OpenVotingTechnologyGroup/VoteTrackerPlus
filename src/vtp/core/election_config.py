@@ -27,6 +27,7 @@ import yaml
 # local imports
 from .common import Globals
 from .contest import Contest
+from .operation import Operation
 
 
 # pylint: disable=too-many-instance-attributes
@@ -105,7 +106,7 @@ class ElectionConfig:
     _election_data = None
 
     @staticmethod
-    def configure_election(operation_self: dict, election_data_dir: str):
+    def configure_election(operation_self: Operation, election_data_dir: str):
         """
         Return the existing ElectionData or parse a new one into
         existence.  This is the entrypoint/wrapper into/around the
@@ -204,7 +205,7 @@ class ElectionConfig:
                         f"supported: {bad_keys}"
                     )
 
-    def __init__(self, operation_self: dict, election_data_dir: str = "."):
+    def __init__(self, operation_self: Operation, election_data_dir: str = "."):
         """Constructor for ElectionConfig.  If no election_data_dir is
         supplied, then the CWD _MUST_ be in the current ElectionData
         tree (the election_data_dir) where the election is happening -
@@ -231,6 +232,7 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
                 incoming_printlevel=5,
             )
             result2 = self.operation_self.shell_out(
@@ -238,6 +240,7 @@ class ElectionConfig:
                 check=True,
                 capture_output=True,
                 text=True,
+                printonly_override=True,
                 incoming_printlevel=5,
             )
 
@@ -518,11 +521,11 @@ class ElectionConfig:
         Given a set of active ggos, create a unique ggo name.  For the
         time being, just sort order the ggos UIDs
         """
-        ggo_unique_name = [self.get_node(ggo, "uid") for ggo in active_ggos]
+        ggo_unique_name = [str(self.get_node(ggo, "uid")) for ggo in active_ggos]
         # alphanumerically sort the string
-        ggo_unique_name.sort(key=int)
+        ggo_unique_name.sort(key=str)
         # for now, no error checking ...
-        ggo_unique_name.append(filename)
+        ggo_unique_name.append(str(filename))
         return ",".join(ggo_unique_name)
 
     def gen_blank_ballot_location(self, active_ggos, ballot_subdir, style="json"):
