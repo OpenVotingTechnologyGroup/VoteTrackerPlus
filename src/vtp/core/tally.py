@@ -103,10 +103,7 @@ class Tally:
         # At this point any contest tallied against this contest must
         # match all the fields with the exception of selection and
         # write-in, but that check is done in tallyho below.
-        if not (
-            self.reference_contest["tally"] == "plurality"
-            or self.reference_contest["tally"] == "rcv"
-        ):
+        if self.reference_contest["tally"] not in ["plurality", "rcv", "pwc"]:
             raise NotImplementedError(
                 f"the specified tally ({self.reference_contest['tally']}) is not yet implemented"
             )
@@ -238,6 +235,15 @@ class Tally:
             # A blank contest
             if provenance_digest or self.operation_self.verbosity == 4:
                 self.operation_self.imprimir(f"No vote {digest}: BLANK", 0)
+
+    def tally_a_pwc_contest(
+        self,
+        contest: dict,
+        provenance_digest: str,
+        vote_count: int,
+        digest: str,
+    ):
+        """pairwise Condorcet tally"""
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -624,7 +630,9 @@ class Tally:
             errors[digest].append(err_message)
 
     # pylint: disable=too-many-branches
-    def parse_and_tally_a_contest(self, contest_batch: list, checks: list):
+    def parse_and_tally_a_contest(
+        self, contest_batch: list, checks: list, tally_override: str = ""
+    ):
         """
         Will parse all the contests validating each entry.  Choices
         that are in the self.multiseat_winners dict will be skipped -
@@ -682,11 +690,11 @@ class Tally:
             # the CVRs.  And that can be done here.  But with more
             # complicated tallies such as RCV, the additional passes
             # are done outside of this for loop.
-            if contest["tally"] == "plurality":
+            if tally_override == "plurality" or contest["tally"] == "plurality":
                 self.tally_a_plurality_contest(
                     contest, provenance_digest, vote_count, digest
                 )
-            elif contest["tally"] == "rcv":
+            elif tally_override == "rcv" or contest["tally"] == "rcv":
                 # parse_and_tally_a_contest will be called once at the
                 # beginning of each RCV open seat tally.
                 # self.multiseat_winners will be null for the first seat
@@ -697,6 +705,8 @@ class Tally:
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
                 self.tally_a_rcv_contest(contest, provenance_digest, vote_count, digest)
+            elif tally_override == "pwc" or contest["tally"] == "pwc":
+                self.tally_a_pwc_contest(contest, provenance_digest, vote_count, digest)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will
@@ -719,6 +729,7 @@ class Tally:
         self,
         contest_batch: list,
         checks: list,
+        tally_override: str = "",
     ):
         """
         Will verify and tally the suppllied unique contest across all
@@ -726,6 +737,10 @@ class Tally:
         and checks is a list of optional CVR digests (from the voter)
         to check.
         """
+        # Maybe override the tally
+        if tally_override:
+            self.reference_contest["tally"] = tally_override
+
         # Loop over open seats. For plurality, regardless of open
         # seats there is only one iteration - a check will exit the
         # loop. For RCV, all the following rounds are handled by
@@ -734,7 +749,7 @@ class Tally:
             # Prologue header
             if self.reference_contest["tally"] == "plurality":
                 self.operation_self.imprimir("Plurality (one round)", 0)
-            else:
+            elif self.reference_contest["tally"] == "rcv":
                 self.operation_self.imprimir_formatting("empty_line")
                 if len(contest_batch) > 1:
                     self.operation_self.imprimir_formatting("horizontal_shortline")
@@ -743,9 +758,18 @@ class Tally:
                 self.operation_self.imprimir(
                     f"RCV: initial tally, {Globals.make_ordinal(seat)} seat", 0
                 )
+            elif self.reference_contest["tally"] == "pwc":
+                self.operation_self.imprimir("Pairwise Condorcet (one round)", 0)
+            else:
+                raise NotImplementedError(
+                    f"the specified tally ({self.reference_contest['tally']}) "
+                    "is not yet implemented"
+                )
 
             # parse all the CVRs and create the first round of tallys
-            total_votes = self.parse_and_tally_a_contest(contest_batch, checks)
+            total_votes = self.parse_and_tally_a_contest(
+                contest_batch, checks, tally_override
+            )
             # For all tallies order what has been counted so far (a tuple)
             self.rcv_round[0] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True
@@ -753,6 +777,12 @@ class Tally:
             self.rcv_round.append([])
             # If plurality, the tally is done
             if self.reference_contest["tally"] == "plurality":
+                # record the winner order, print, and return
+                self.winner_order.append(self.rcv_round[0])
+                self.print_final_results()
+                return
+            # If pairwise Condorcet, the tally is done
+            if self.reference_contest["tally"] == "pwc":
                 # record the winner order, print, and return
                 self.winner_order.append(self.rcv_round[0])
                 self.print_final_results()
