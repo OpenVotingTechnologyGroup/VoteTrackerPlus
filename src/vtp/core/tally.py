@@ -28,6 +28,7 @@ from .operation import Operation
 
 
 # pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
+# pylint: disable=too-many-public-methods # 21/20
 class Tally:
     """
     A class to tally ballot contests a.k.a. CVRs.  The three primary
@@ -176,6 +177,32 @@ class Tally:
         }
         return json.dumps(tally_dict, sort_keys=True, indent=4, ensure_ascii=False)
 
+    def determine_plurality_winners(self):
+        """Given a completed plurality contest, determine the winners
+        caveat any issues such as ties.  self.winner_order has already
+        been properly defined.
+        """
+        open_positions = int(self.reference_contest.get("open_positions", 1))
+        winners = []
+        idx = 0
+        while len(winners) < open_positions and idx < len(self.winner_order[0]):
+            current_count = self.winner_order[0][idx][1]
+            # Add all choices with this count
+            tied_choices = [
+                choice
+                for choice, count in self.winner_order[0]
+                if count == current_count
+            ]
+            winners.extend(tied_choices)
+            idx += len(tied_choices)
+            if len(tied_choices) > 1:
+                self.operation_self.imprimir(
+                    f"There is a tie: {tied_choices} for the {Globals.make_ordinal(idx)} seat",
+                    0,
+                )
+        # If more winners than open_positions due to ties, keep all ties
+        return winners
+
     def tally_a_plurality_contest(
         self,
         contest: dict,
@@ -184,7 +211,7 @@ class Tally:
         digest: str,
     ):
         """plurality tally"""
-        for count in range(self.reference_contest["max_selections"]):
+        for count in range(int(self.reference_contest["open_positions"])):
             if 0 <= count < len(contest["selection"]):
                 # yes this can be one line, but the reader may
                 # be interested in verifying the explicit
@@ -668,7 +695,9 @@ class Tally:
                 "contest_type",
                 "election_upstream_remote",
             ]:
-                if field != "win_by":
+                if field != "win_by" and not (
+                    tally_override != "" and field == "tally"
+                ):
                     if field in self.reference_contest:
                         if self.reference_contest[field] != contest[field]:
                             self.add_digest_error(
@@ -748,7 +777,7 @@ class Tally:
         for seat in range(1, int(self.reference_contest["open_positions"]) + 1):
             # Prologue header
             if self.reference_contest["tally"] == "plurality":
-                self.operation_self.imprimir("Plurality (one round)", 0)
+                self.operation_self.imprimir("Plurality", 0)
             elif self.reference_contest["tally"] == "rcv":
                 self.operation_self.imprimir_formatting("empty_line")
                 if len(contest_batch) > 1:
@@ -759,7 +788,7 @@ class Tally:
                     f"RCV: initial tally, {Globals.make_ordinal(seat)} seat", 0
                 )
             elif self.reference_contest["tally"] == "pwc":
-                self.operation_self.imprimir("Pairwise Condorcet (one round)", 0)
+                self.operation_self.imprimir("Pairwise Condorcet", 0)
             else:
                 raise NotImplementedError(
                     f"the specified tally ({self.reference_contest['tally']}) "
@@ -779,13 +808,18 @@ class Tally:
             if self.reference_contest["tally"] == "plurality":
                 # record the winner order, print, and return
                 self.winner_order.append(self.rcv_round[0])
-                self.print_final_results()
+                # Neeed to determine as best as possible the actual
+                # winners (for printing)
+                winners = self.determine_plurality_winners()
+                self.print_final_results(winners)
                 return
             # If pairwise Condorcet, the tally is done
             if self.reference_contest["tally"] == "pwc":
                 # record the winner order, print, and return
                 self.winner_order.append(self.rcv_round[0])
-                self.print_final_results()
+                # ZZZ this will probably not be correct post pwc implementation
+                winners = [item[0] for item in self.multiseat_winners]
+                self.print_final_results(winners)
                 return
 
             # The rest of this block handles RCV
@@ -842,7 +876,8 @@ class Tally:
                     self.reference_contest["open_positions"]
                 ):
                     # Print final results text
-                    self.print_final_results()
+                    winners = [item[0] for item in self.multiseat_winners[0]]
+                    self.print_final_results(winners)
                     return
                 self.print_seat_results(self.winner_order, seat)
                 # Reset state needed for multiseat
@@ -866,7 +901,8 @@ class Tally:
             # If this is the last open_position, need to exit now.
             if seat >= int(self.reference_contest["open_positions"]):
                 # Print final results text
-                self.print_final_results()
+                winners = [item[0] for item in self.multiseat_winners]
+                self.print_final_results(winners)
                 return
 
             # The following is the prologue for the next open position.
@@ -886,7 +922,7 @@ class Tally:
         # The above for loop in theory should always return...
         return
 
-    def print_seat_results(self, winners, seat):
+    def print_seat_results(self, winners: list, seat: int):
         """
         Will print the results of the current seat winner.  Not called
         when there is only one open seat
@@ -907,11 +943,11 @@ class Tally:
             0,
         )
 
-    def print_final_results(self):
+    def print_final_results(self, winners: list):
         """Will print the results of the tally"""
-        # import pdb; pdb.set_trace()
         self.operation_self.imprimir(
-            f"Final RCV round results for contest {self.reference_contest['contest_name']} "
+            f"Final {self.reference_contest['tally']} round results for contest "
+            f"{self.reference_contest['contest_name']} "
             f"(uid={self.reference_contest['uid']}):",
             0,
         )
@@ -921,8 +957,9 @@ class Tally:
         for result in self.rcv_round[-2]:
             self.operation_self.imprimir(f"  {result}")
         # When there is only one open seat
+        # import pdb; pdb.set_trace()
         self.operation_self.imprimir(
-            f"Winner(s): {', '.join([item[0] for item in self.multiseat_winners])}",
+            f"Winner(s): {', '.join(winners)}",
             0,
         )
 
