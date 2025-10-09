@@ -182,26 +182,7 @@ class Tally:
         caveat any issues such as ties.  self.winner_order has already
         been properly defined.
         """
-        open_positions = int(self.reference_contest.get("open_positions", 1))
-        winners = []
-        idx = 0
-        while len(winners) < open_positions and idx < len(self.winner_order[0]):
-            current_count = self.winner_order[0][idx][1]
-            # Add all choices with this count
-            tied_choices = [
-                choice
-                for choice, count in self.winner_order[0]
-                if count == current_count
-            ]
-            winners.extend(tied_choices)
-            idx += len(tied_choices)
-            if len(tied_choices) > 1:
-                self.operation_self.imprimir(
-                    f"There is a tie: {tied_choices} for the {Globals.make_ordinal(idx)} seat",
-                    0,
-                )
-        # If more winners than open_positions due to ties, keep all ties
-        return winners
+        # loop over self.winner_order filling the open seats
 
     def tally_a_plurality_contest(
         self,
@@ -211,6 +192,7 @@ class Tally:
         digest: str,
     ):
         """plurality tally"""
+        # import pdb; pdb.set_trace()
         for count in range(int(self.reference_contest["open_positions"])):
             if 0 <= count < len(contest["selection"]):
                 # yes this can be one line, but the reader may
@@ -271,6 +253,37 @@ class Tally:
         digest: str,
     ):
         """pairwise Condorcet tally"""
+        # Initialize pairwise matrix if not already present
+        if not hasattr(self, "pairwise_matrix"):
+            choices = Contest.get_choices_from_contest(self.reference_contest["choices"])
+            self.pairwise_matrix = {
+                (a, b): 0
+                for a in choices for b in choices if a != b
+            }
+            self.pairwise_candidates = choices
+
+        # Only process ballots with at least one selection
+        ranking = contest.get("selection", [])
+        if not ranking:
+            if provenance_digest or self.operation_self.verbosity == 4:
+                self.operation_self.imprimir(f"No vote {digest}: BLANK", 0)
+            return
+
+        # Build a rank lookup for this ballot
+        rank_index = {name: idx for idx, name in enumerate(ranking)}
+        # For unranked candidates, treat as ranked last (after all ranked)
+        for a in self.pairwise_candidates:
+            for b in self.pairwise_candidates:
+                if a == b:
+                    continue
+                # a is preferred to b if:
+                # - a is ranked and b is not, or
+                # - both are ranked and a's index < b's index
+                if a in rank_index and b not in rank_index:
+                    self.pairwise_matrix[(a, b)] += 1
+                elif a in rank_index and b in rank_index and rank_index[a] < rank_index[b]:
+                    self.pairwise_matrix[(a, b)] += 1
+                # else: b is preferred or tie/no info
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -807,9 +820,11 @@ class Tally:
             # If plurality, the tally is done
             if self.reference_contest["tally"] == "plurality":
                 # record the winner order, print, and return
+                # import pdb; pdb.set_trace()
                 self.winner_order.append(self.rcv_round[0])
                 # Neeed to determine as best as possible the actual
                 # winners (for printing)
+                import pdb; pdb.set_trace()
                 winners = self.determine_plurality_winners()
                 self.print_final_results(winners)
                 return
@@ -962,6 +977,48 @@ class Tally:
             f"Winner(s): {', '.join(winners)}",
             0,
         )
+
+    def determine_condorcet_winners(self):
+        """
+        Use networkx to build a directed acyclic graph (DAG) of pairwise victories.
+        Edges are added in descending order of margin. If an edge creates a cycle,
+        print and skip it. At the end, print the topological sort of the DAG.
+        """
+        import networkx as nx
+
+        if not hasattr(self, "pairwise_matrix"):
+            raise TallyException("Pairwise matrix not computed. Run tally_a_pwc_contest first.")
+
+        G = nx.DiGraph()
+        candidates = list(self.pairwise_candidates)
+        G.add_nodes_from(candidates)
+
+        # Build a list of all pairwise victories with their margins
+        pairwise_results = []
+        for (a, b), ab_count in self.pairwise_matrix.items():
+            ba_count = self.pairwise_matrix.get((b, a), 0)
+            margin = ab_count - ba_count
+            if margin > 0:
+                pairwise_results.append(((a, b), margin, ab_count, ba_count))
+        # Sort by margin descending, then by ab_count descending
+        pairwise_results.sort(key=lambda x: (x[1], x[2]), reverse=True)
+
+        for (a, b), margin, ab_count, ba_count in pairwise_results:
+            G.add_edge(a, b, margin=margin, ab_count=ab_count, ba_count=ba_count)
+            if not nx.is_directed_acyclic_graph(G):
+                G.remove_edge(a, b)
+                self.operation_self.imprimir(
+                    f"Skipping edge {a} -> {b} (margin={margin}) to avoid cycle", 0
+                )
+
+        # Print the topological sort (Condorcet order)
+        topo_order = list(nx.topological_sort(G))
+        self.operation_self.imprimir(
+            f"Condorcet topological order: {', '.join(topo_order)}", 0
+        )
+        # Return up to open_positions winners
+        seats = int(self.reference_contest.get("open_positions", 1))
+        return topo_order[:seats]
 
 
 # EOF
