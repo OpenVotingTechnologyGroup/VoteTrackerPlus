@@ -20,6 +20,8 @@
 import json
 import operator
 
+import networkx as nx
+
 # local
 from .common import Globals
 from .contest import Contest
@@ -29,6 +31,7 @@ from .operation import Operation
 
 # pylint: disable=too-many-instance-attributes # (8/7 - not worth it at this time)
 # pylint: disable=too-many-public-methods # 21/20
+# pylint: disable=too-many-lines
 class Tally:
     """
     A class to tally ballot contests a.k.a. CVRs.  The three primary
@@ -108,6 +111,10 @@ class Tally:
             raise NotImplementedError(
                 f"the specified tally ({self.reference_contest['tally']}) is not yet implemented"
             )
+        # Initialize pairwise matrix if not already present - used for
+        # Condorcet tallies
+        choices = Contest.get_choices_from_contest(self.reference_contest["choices"])
+        self.pairwise_matrix = {(a, b): 0 for a in choices for b in choices if a != b}
 
     def init_selection_counts(self):
         """Will initialize the selection_counts to 0"""
@@ -182,6 +189,7 @@ class Tally:
         caveat any issues such as ties.  self.winner_order has already
         been properly defined.
         """
+        # loop over self.winner_order filling the open seats
         open_positions = int(self.reference_contest.get("open_positions", 1))
         winners = []
         idx = 0
@@ -267,10 +275,48 @@ class Tally:
         self,
         contest: dict,
         provenance_digest: str,
-        vote_count: int,
         digest: str,
     ):
         """pairwise Condorcet tally"""
+        # Only process ballots with at least one selection
+        ranking = contest.get("selection", [])
+        if not ranking:
+            if provenance_digest or self.operation_self.verbosity == 4:
+                self.operation_self.imprimir(f"No vote {digest}: BLANK", 0)
+            return
+
+        # Build a rank lookup for this ballot
+        rank_index = {name: idx for idx, name in enumerate(ranking)}
+        if provenance_digest or self.operation_self.verbosity == 4:
+            self.operation_self.imprimir(
+                f"Pairwise ranking for {digest}: {rank_index}", 0
+            )
+        # For unranked candidates, treat as ranked last (after all ranked)
+        choices = Contest.get_choices_from_contest(self.reference_contest["choices"])
+        for a in choices:
+            for b in choices:
+                if a == b:
+                    continue
+                # a is preferred to b if:
+                # - a is ranked and b is not, or
+                # - both are ranked and a's index < b's index
+                if a in rank_index and b not in rank_index:
+                    self.pairwise_matrix[(a, b)] += 1
+                    if provenance_digest or self.operation_self.verbosity == 4:
+                        self.operation_self.imprimir(
+                            f"Pairwise vote {digest}: {(a,b)}", 0
+                        )
+                elif (
+                    a in rank_index
+                    and b in rank_index
+                    and rank_index[a] < rank_index[b]
+                ):
+                    self.pairwise_matrix[(a, b)] += 1
+                    if provenance_digest or self.operation_self.verbosity == 4:
+                        self.operation_self.imprimir(
+                            f"Pairwise vote {digest}: {(a,b)}", 0
+                        )
+                # else: b is preferred or tie/no info
 
     def safely_determine_last_place_names(self, current_round: int) -> list:
         """Safely determine the next set of last_place_names for which
@@ -719,11 +765,15 @@ class Tally:
             # the CVRs.  And that can be done here.  But with more
             # complicated tallies such as RCV, the additional passes
             # are done outside of this for loop.
-            if tally_override == "plurality" or contest["tally"] == "plurality":
+            if tally_override == "plurality" or (
+                tally_override == "" and contest["tally"] == "plurality"
+            ):
                 self.tally_a_plurality_contest(
                     contest, provenance_digest, vote_count, digest
                 )
-            elif tally_override == "rcv" or contest["tally"] == "rcv":
+            elif tally_override == "rcv" or (
+                tally_override == "" and contest["tally"] == "rcv"
+            ):
                 # parse_and_tally_a_contest will be called once at the
                 # beginning of each RCV open seat tally.
                 # self.multiseat_winners will be null for the first seat
@@ -734,8 +784,10 @@ class Tally:
                 # Since this is the first round on a rcv tally, just
                 # grap the first selection
                 self.tally_a_rcv_contest(contest, provenance_digest, vote_count, digest)
-            elif tally_override == "pwc" or contest["tally"] == "pwc":
-                self.tally_a_pwc_contest(contest, provenance_digest, vote_count, digest)
+            elif tally_override == "pwc" or (
+                tally_override == "" and contest["tally"] == "pwc"
+            ):
+                self.tally_a_pwc_contest(contest, provenance_digest, digest)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will
@@ -777,7 +829,7 @@ class Tally:
         for seat in range(1, int(self.reference_contest["open_positions"]) + 1):
             # Prologue header
             if self.reference_contest["tally"] == "plurality":
-                self.operation_self.imprimir("Plurality", 0)
+                self.operation_self.imprimir("Running a plurality tally", 0)
             elif self.reference_contest["tally"] == "rcv":
                 self.operation_self.imprimir_formatting("empty_line")
                 if len(contest_batch) > 1:
@@ -788,7 +840,7 @@ class Tally:
                     f"RCV: initial tally, {Globals.make_ordinal(seat)} seat", 0
                 )
             elif self.reference_contest["tally"] == "pwc":
-                self.operation_self.imprimir("Pairwise Condorcet", 0)
+                self.operation_self.imprimir("Running a pairwise Condorcet tally", 0)
             else:
                 raise NotImplementedError(
                     f"the specified tally ({self.reference_contest['tally']}) "
@@ -799,6 +851,16 @@ class Tally:
             total_votes = self.parse_and_tally_a_contest(
                 contest_batch, checks, tally_override
             )
+            # If pairwise Condorcet, though contest votes have been
+            # counted, the actual tally is fundementally then either
+            # plurality or rcv.
+            if self.reference_contest["tally"] == "pwc":
+                # record the winner order, print, and return for yucks
+                # anyway
+                self.winner_order.append(self.rcv_round[0])
+                self.determine_condorcet_winners()
+                return
+
             # For all tallies order what has been counted so far (a tuple)
             self.rcv_round[0] = sorted(
                 self.selection_counts.items(), key=operator.itemgetter(1), reverse=True
@@ -807,21 +869,13 @@ class Tally:
             # If plurality, the tally is done
             if self.reference_contest["tally"] == "plurality":
                 # record the winner order, print, and return
+                # import pdb; pdb.set_trace()
                 self.winner_order.append(self.rcv_round[0])
                 # Neeed to determine as best as possible the actual
                 # winners (for printing)
                 winners = self.determine_plurality_winners()
                 self.print_final_results(winners)
                 return
-            # If pairwise Condorcet, the tally is done
-            if self.reference_contest["tally"] == "pwc":
-                # record the winner order, print, and return
-                self.winner_order.append(self.rcv_round[0])
-                # ZZZ this will probably not be correct post pwc implementation
-                winners = [item[0] for item in self.multiseat_winners]
-                self.print_final_results(winners)
-                return
-
             # The rest of this block handles RCV
 
             # See if another RCV round is necessary.  Note that win_by
@@ -962,6 +1016,50 @@ class Tally:
             f"Winner(s): {', '.join(winners)}",
             0,
         )
+
+    def determine_condorcet_winners(self):
+        """
+        Use networkx to build a directed acyclic graph (DAG) of pairwise victories.
+        Edges are added in descending order of margin. If an edge creates a cycle,
+        print and skip it. At the end, print the topological sort of the DAG.
+        """
+        if not hasattr(self, "pairwise_matrix"):
+            raise TallyException(
+                "Pairwise matrix not computed. Run tally_a_pwc_contest first."
+            )
+
+        condorcet_graph = nx.DiGraph()
+        candidates = Contest.get_choices_from_contest(self.reference_contest["choices"])
+        condorcet_graph.add_nodes_from(candidates)
+
+        # Build a list of all pairwise victories with their margins
+        pairwise_results = []
+        for (a, b), ab_count in self.pairwise_matrix.items():
+            ba_count = self.pairwise_matrix.get((b, a), 0)
+            margin = ab_count - ba_count
+            if margin > 0:
+                pairwise_results.append(((a, b), margin, ab_count, ba_count))
+        # Sort by margin descending, then by ab_count descending
+        pairwise_results.sort(key=lambda x: (x[1], x[2]), reverse=True)
+
+        for (a, b), margin, ab_count, ba_count in pairwise_results:
+            condorcet_graph.add_edge(
+                a, b, margin=margin, ab_count=ab_count, ba_count=ba_count
+            )
+            if not nx.is_directed_acyclic_graph(condorcet_graph):
+                condorcet_graph.remove_edge(a, b)
+                self.operation_self.imprimir(
+                    f"Skipping edge {a} -> {b} (margin={margin}) to avoid cycle", 0
+                )
+
+        # Print the topological sort (Condorcet order)
+        topo_order = list(nx.topological_sort(condorcet_graph))
+        self.operation_self.imprimir(
+            f"Condorcet topological order: {', '.join(topo_order)}", 0
+        )
+        # Return up to open_positions winners
+        seats = int(self.reference_contest.get("open_positions", 1))
+        self.operation_self.imprimir(f"Condorcet winners: {topo_order[:seats]}", 0)
 
 
 # EOF
