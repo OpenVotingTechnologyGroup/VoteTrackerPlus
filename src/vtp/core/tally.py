@@ -259,12 +259,12 @@ class Tally:
             self.vote_count += 1
             if provenance_digest:
                 self.operation_self.imprimir(
-                    f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
+                    f"Counted vote {vote_count} ({provenance_digest}) for {selection}",
                     0,
                 )
             elif self.operation_self.verbosity == 4:
                 self.operation_self.imprimir(
-                    f"counted {digest} as vote {vote_count}: selection={selection}"
+                    f"counted vote {vote_count} ({digest}) for {selection}"
                 )
         else:
             # A blank contest
@@ -275,6 +275,7 @@ class Tally:
         self,
         contest: dict,
         provenance_digest: str,
+        ballot_count: int,
         digest: str,
     ):
         """pairwise Condorcet tally"""
@@ -289,7 +290,7 @@ class Tally:
         rank_index = {name: idx for idx, name in enumerate(ranking)}
         if provenance_digest or self.operation_self.verbosity == 4:
             self.operation_self.imprimir(
-                f"Pairwise ranking for {digest}: {rank_index}", 0
+                f"Pairwise ranking for ballot vote {ballot_count} ({digest}): {rank_index}", 0
             )
         # For unranked candidates, treat as ranked last (after all ranked)
         choices = Contest.get_choices_from_contest(self.reference_contest["choices"])
@@ -304,7 +305,7 @@ class Tally:
                     self.pairwise_matrix[(a, b)] += 1
                     if provenance_digest or self.operation_self.verbosity == 4:
                         self.operation_self.imprimir(
-                            f"Pairwise vote {digest}: {(a,b)}", 0
+                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}", 0
                         )
                 elif (
                     a in rank_index
@@ -314,7 +315,7 @@ class Tally:
                     self.pairwise_matrix[(a, b)] += 1
                     if provenance_digest or self.operation_self.verbosity == 4:
                         self.operation_self.imprimir(
-                            f"Pairwise vote {digest}: {(a,b)}", 0
+                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}", 0
                         )
                 # else: b is preferred or tie/no info
 
@@ -564,7 +565,7 @@ class Tally:
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
                                 f"RCV: {digest} (contest={contest['contest_name']}) last place "
-                                f"pop and count ({last_place_name} -> {new_selection})",
+                                f"pop and count: {last_place_name} (vote {total_votes}) -> {new_selection} (vote {self.selection_counts[new_selection]})",
                                 0,
                             )
                     else:
@@ -787,7 +788,7 @@ class Tally:
             elif tally_override == "pwc" or (
                 tally_override == "" and contest["tally"] == "pwc"
             ):
-                self.tally_a_pwc_contest(contest, provenance_digest, digest)
+                self.tally_a_pwc_contest(contest, provenance_digest, vote_count, digest)
             else:
                 # This code block should never be executed as the
                 # constructor or the Validate values clause above will
@@ -1011,7 +1012,6 @@ class Tally:
         for result in self.rcv_round[-2]:
             self.operation_self.imprimir(f"  {result}")
         # When there is only one open seat
-        # import pdb; pdb.set_trace()
         self.operation_self.imprimir(
             f"Winner(s): {', '.join(winners)}",
             0,
@@ -1049,10 +1049,11 @@ class Tally:
             if not nx.is_directed_acyclic_graph(condorcet_graph):
                 condorcet_graph.remove_edge(a, b)
                 self.operation_self.imprimir(
-                    f"Skipping edge {a} -> {b} (margin={margin}) to avoid cycle", 0
+                    f"Skipping edge {a} -> {b} (margin={margin}, {ab_count}-{ba_count}) to avoid cycle", 0
                 )
 
         # Print the topological sort (Condorcet order)
+        # import pdb; pdb.set_trace()
         topo_order = list(nx.topological_sort(condorcet_graph))
         self.operation_self.imprimir(
             f"Condorcet topological order: {', '.join(topo_order)}", 0
