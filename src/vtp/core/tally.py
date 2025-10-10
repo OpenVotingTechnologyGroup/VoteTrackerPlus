@@ -229,16 +229,23 @@ class Tally:
                 self.vote_count += 1
                 if provenance_digest:
                     self.operation_self.imprimir(
-                        f"Counted {provenance_digest} as vote {vote_count}: selection={selection}",
+                        f"Counted vote {vote_count} ({provenance_digest}): selection={selection}",
                         0,
                     )
                 elif self.operation_self.verbosity == 4:
                     self.operation_self.imprimir(
-                        f"counted {digest} as vote {vote_count}: selection={selection}"
+                        f"counted vote {vote_count} ({digest}): selection={selection}"
                     )
             else:
-                if provenance_digest or self.operation_self.verbosity == 4:
-                    self.operation_self.imprimir(f"No-vote {digest}: BLANK", 0)
+                # A blank contest
+                if provenance_digest:
+                    self.operation_self.imprimir(
+                        f"Counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                    )
+                if self.operation_self.verbosity == 4:
+                    self.operation_self.imprimir(
+                        f"counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                    )
 
     def tally_a_rcv_contest(
         self,
@@ -268,8 +275,14 @@ class Tally:
                 )
         else:
             # A blank contest
-            if provenance_digest or self.operation_self.verbosity == 4:
-                self.operation_self.imprimir(f"No vote {digest}: BLANK", 0)
+            if provenance_digest:
+                self.operation_self.imprimir(
+                    f"Counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                )
+            if self.operation_self.verbosity == 4:
+                self.operation_self.imprimir(
+                    f"counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                )
 
     def tally_a_pwc_contest(
         self,
@@ -290,7 +303,8 @@ class Tally:
         rank_index = {name: idx for idx, name in enumerate(ranking)}
         if provenance_digest or self.operation_self.verbosity == 4:
             self.operation_self.imprimir(
-                f"Pairwise ranking for ballot vote {ballot_count} ({digest}): {rank_index}", 0
+                f"Pairwise ranking for ballot vote {ballot_count} ({digest}): {rank_index}",
+                0,
             )
         # For unranked candidates, treat as ranked last (after all ranked)
         choices = Contest.get_choices_from_contest(self.reference_contest["choices"])
@@ -305,7 +319,8 @@ class Tally:
                     self.pairwise_matrix[(a, b)] += 1
                     if provenance_digest or self.operation_self.verbosity == 4:
                         self.operation_self.imprimir(
-                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}", 0
+                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}",
+                            0,
                         )
                 elif (
                     a in rank_index
@@ -315,7 +330,8 @@ class Tally:
                     self.pairwise_matrix[(a, b)] += 1
                     if provenance_digest or self.operation_self.verbosity == 4:
                         self.operation_self.imprimir(
-                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}", 0
+                            f"Pairwise vote {self.pairwise_matrix[(a, b)]} ({digest}) for {(a,b)}",
+                            0,
                         )
                 # else: b is preferred or tie/no info
 
@@ -540,6 +556,11 @@ class Tally:
                 )
             # Note - if there is no selection, there is no selection
             if not contest["selection"]:
+                if digest in checks or self.operation_self.verbosity >= 4:
+                    self.operation_self.imprimir(
+                        f"RCV: vote {total_votes} ({digest}) no vote - BLANK ",
+                        0,
+                    )
                 continue
             for last_place_name in last_place_names:
                 # Note - as the rounds go by, the
@@ -564,14 +585,15 @@ class Tally:
                         # original variant: if digest in checks or loglevel == "DEBUG":
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
-                                f"RCV: {digest} (contest={contest['contest_name']}) last place "
-                                f"pop and count: {last_place_name} (vote {total_votes}) -> {new_selection} (vote {self.selection_counts[new_selection]})",
+                                f"RCV: vote {total_votes} ({digest}) last place "
+                                f"pop and count: {last_place_name} (vote {total_votes}) "
+                                f"-> {new_selection} (vote {self.selection_counts[new_selection]})",
                                 0,
                             )
                     else:
                         if digest in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
-                                f"RCV: {digest} (contest={contest['contest_name']}) last place "
+                                f"RCV: vote {total_votes} ({digest}) last place "
                                 f"pop and drop ({last_place_name} -> BLANK)",
                                 0,
                             )
@@ -1049,7 +1071,9 @@ class Tally:
             if not nx.is_directed_acyclic_graph(condorcet_graph):
                 condorcet_graph.remove_edge(a, b)
                 self.operation_self.imprimir(
-                    f"Skipping edge {a} -> {b} (margin={margin}, {ab_count}-{ba_count}) to avoid cycle", 0
+                    f"Skipping edge {a} -> {b} (margin={margin}, {ab_count}-{ba_count}) "
+                    "to avoid cycle",
+                    0,
                 )
 
         # Print the topological sort (Condorcet order)
@@ -1060,7 +1084,7 @@ class Tally:
         )
         # Return up to open_positions winners
         seats = int(self.reference_contest.get("open_positions", 1))
-        self.operation_self.imprimir(f"Condorcet winners: {topo_order[:seats]}", 0)
+        self.operation_self.imprimir(f"Condorcet winner(s): {topo_order[:seats]}", 0)
 
 
 # EOF
