@@ -229,22 +229,22 @@ class Tally:
                 self.vote_count += 1
                 if provenance_digest:
                     self.operation_self.imprimir(
-                        f"Counted vote {vote_count} ({provenance_digest}): selection={selection}",
+                        f"Counted vote {vote_count} ({provenance_digest}) seat {count + 1} selection={selection}",
                         0,
                     )
                 elif self.operation_self.verbosity == 4:
                     self.operation_self.imprimir(
-                        f"counted vote {vote_count} ({digest}): selection={selection}"
+                        f"counted vote {vote_count} ({digest}) seat {count + 1} selection={selection}"
                     )
             else:
                 # A blank contest
                 if provenance_digest:
                     self.operation_self.imprimir(
-                        f"Counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                        f"Counted vote {vote_count} ({digest}) seat {count + 1} as no vote - BLANK", 0
                     )
                 if self.operation_self.verbosity == 4:
                     self.operation_self.imprimir(
-                        f"counted vote {vote_count} ({digest}) as no vote - BLANK", 0
+                        f"counted vote {vote_count} ({digest}) seat {count + 1} as no vote - BLANK", 0
                     )
 
     def tally_a_rcv_contest(
