@@ -1057,6 +1057,11 @@ class Tally:
         condorcet_graph = nx.DiGraph()
         candidates = Contest.get_choices_from_contest(self.reference_contest["choices"])
         condorcet_graph.add_nodes_from(candidates)
+        self.operation_self.imprimir(
+            f"Creating {len(candidates)} node Condorcet directed acyclic graph "
+            "to determine wiiners:",
+            0,
+        )
 
         # Build a list of all pairwise victories with their margins
         pairwise_results = []

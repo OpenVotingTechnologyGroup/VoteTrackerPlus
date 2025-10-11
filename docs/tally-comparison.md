@@ -221,7 +221,21 @@ Pairwise vote 107 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtr
 Pairwise vote 111 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Gloria Gamma')
 Pairwise vote 106 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'David Delta')
 Pairwise vote 101 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Emily Echo')
+Creating 6 node Condorcet directed acyclic graph to determine wiiners:
+Adding edge Emily Echo -> Francis Foxtrot (margin=20, 121-101)
+Adding edge Anthony Alpha -> David Delta (margin=17, 119-102)
+Adding edge Gloria Gamma -> David Delta (margin=17, 119-102)
+Adding edge Betty Beta -> Emily Echo (margin=16, 119-103)
+Adding edge Anthony Alpha -> Francis Foxtrot (margin=12, 117-105)
+Adding edge David Delta -> Francis Foxtrot (margin=10, 116-106)
+Adding edge Betty Beta -> Francis Foxtrot (margin=9, 116-107)
+Adding edge Anthony Alpha -> Gloria Gamma (margin=9, 115-106)
+Adding edge Anthony Alpha -> Emily Echo (margin=9, 115-106)
+Adding edge Betty Beta -> Anthony Alpha (margin=8, 115-107)
+Adding edge Gloria Gamma -> Emily Echo (margin=5, 113-108)
+Adding edge Betty Beta -> David Delta (margin=4, 113-109)
 Skipping edge Gloria Gamma -> Betty Beta (margin=4, 113-109) to avoid cycle
+Adding edge David Delta -> Emily Echo (margin=3, 112-109)
 Condorcet topological order: Betty Beta, Anthony Alpha, Gloria Gamma, David Delta, Emily Echo, Francis Foxtrot
 Condorcet winner(s): ['Betty Beta', 'Anthony Alpha', 'Gloria Gamma']
 ```
