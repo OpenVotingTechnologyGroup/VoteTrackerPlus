@@ -42,6 +42,7 @@ class TallyContestsOperation(Operation):
         self,
         contest_uid: str = "",
         track_contests: str = "",
+        tally_override: str = "",
     ) -> list:
         """Main function - see -h for more info"""
 
@@ -99,7 +100,7 @@ class TallyContestsOperation(Operation):
                     self.imprimir_formatting("empty_line")
                 self.imprimir_formatting("horizontal_line")
             self.imprimir(
-                f"Scanned {len(contest_batches[contest_batch])} contests "
+                f"Scanned {len(contest_batches[contest_batch])} votes "
                 f"for contest ({contest_batches[contest_batch][0]['contestCVR']['contest_name']}) "
                 f"uid={contest_batches[contest_batch][0]['contestCVR']['uid']}, "
                 f"tally={contest_batches[contest_batch][0]['contestCVR']['tally']}, "
@@ -109,7 +110,9 @@ class TallyContestsOperation(Operation):
             # Tally all the contests for this contest
             #        import pdb; pdb.set_trace()
             try:
-                the_tally.tallyho(contest_batches[contest_batch], track_contests)
+                the_tally.tallyho(
+                    contest_batches[contest_batch], track_contests, tally_override
+                )
             except TallyException as tally_error:
                 self.imprimir(f"[ERROR]: {tally_error}")
                 self.imprimir("Continuing with other contests ...")

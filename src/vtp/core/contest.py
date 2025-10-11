@@ -265,7 +265,7 @@ class Contest:
                 # open_positions.  win_by is just the percentage, not
                 # the actual necessary vote count to be a winner.
                 a_contest_blob["win_by"] = 1.0 / (open_positions + 1.0)
-            elif not a_contest_blob["plurality"]:
+            elif "plurality" != a_contest_blob["tally"]:
                 raise KeyError(
                     "setting win_by in a non plurality contest is not supported - "
                     "it does make sense"

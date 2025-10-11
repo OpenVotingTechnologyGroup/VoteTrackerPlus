@@ -68,6 +68,11 @@ tallying across git submodules/repos.
         default="",
         help="a comma separated list of contests checks to track",
     )
+    parser.add_argument(
+        "--tally_override",
+        default="",
+        help="specify a specific tally to use (plurality, rcv, pwc)",
+    )
     Arguments.add_output_style(parser)
     Arguments.add_verbosity(parser)
     parsed_args = parser.parse_args()
@@ -102,6 +107,7 @@ def main():
     tco.run(
         contest_uid=parsed_args.contest_uid,
         track_contests=parsed_args.track_contests,
+        tally_override=parsed_args.tally_override,
     )
 
 
