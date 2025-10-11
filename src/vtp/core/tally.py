@@ -1059,7 +1059,7 @@ class Tally:
         condorcet_graph.add_nodes_from(candidates)
         self.operation_self.imprimir(
             f"Creating {len(candidates)} node Condorcet directed acyclic graph "
-            "to determine wiiners:",
+            "to determine winners:",
             0,
         )
 
