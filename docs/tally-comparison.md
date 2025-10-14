@@ -31,7 +31,7 @@ Final plurality round results for contest Select Board (uid=0001):
 Winner(s): Anthony Alpha, David Delta, Betty Beta
 ```
 
-## Rank Choice Vote (sequential)
+## Ranked Choice Vote (sequential)
 ```bash
 % tally-contests -c 0001 -t e92c62931cedfe0607865c624c178ecfc64cfd97,08e29630567c00e2e8887c089072d1edf3a92215 --tally_override rcv
 Scanned 224 votes for contest (Select Board) uid=0001, tally=rcv, open_positions=3, max_selections=6 
