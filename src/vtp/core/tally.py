@@ -798,7 +798,7 @@ class Tally:
                 self.tally_a_plurality_contest(
                     contest, provenance_digest, vote_count, digest
                 )
-            elif tally_override == "rcv" or (
+            elif tally_override in ["rcv", "rcv.sequential", "rcv.proportional"] or (
                 tally_override == "" and contest["tally"] == "rcv"
             ):
                 # parse_and_tally_a_contest will be called once at the
@@ -833,6 +833,7 @@ class Tally:
         return vote_count
 
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     def tallyho(
         self,
         contest_batch: list,
@@ -847,7 +848,15 @@ class Tally:
         """
         # Maybe override the tally
         if tally_override:
-            self.reference_contest["tally"] = tally_override
+            if tally_override in ["rcv", "rcv.sequential"]:
+                self.reference_contest["tally"] = "rcv"
+                self.reference_contest["tally_kind"] = "sequential"
+            elif tally_override == "rcv.proportional":
+                self.reference_contest["tally"] = "rcv"
+                self.reference_contest["tally_kind"] = "proportional"
+            else:
+                self.reference_contest["tally"] = tally_override
+                self.reference_contest["tally_kind"] = ""
 
         # Loop over open seats. For plurality, regardless of open
         # seats there is only one iteration - a check will exit the

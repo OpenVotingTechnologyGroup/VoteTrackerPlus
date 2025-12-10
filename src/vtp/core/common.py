@@ -74,6 +74,14 @@ class Globals:
         "SHELL_TIMEOUT": 15,
         # Number of ballots on a ballot receipt
         "BALLOT_RECEIPT_ROWS": 100,
+        # Supported tallies ("rcv" defaults to sequential)
+        "SUPPORTED_TALLIES": [
+            "rcv",
+            "rcv.sequential",
+            "rcv.proportional",
+            "plurality",
+            "pwc",
+        ],
         # Map the ElectionConfig 'kind' to the Address 'kind'
         "kinds_map": {
             "state": "states",
