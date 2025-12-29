@@ -77,10 +77,9 @@ class Globals:
         # Supported tallies ("rcv" defaults to sequential)
         "SUPPORTED_TALLIES": [
             "rcv",
-            "rcv.sequential",
-            "rcv.proportional",
             "plurality",
             "pwc",
+            "stv",
         ],
         # Map the ElectionConfig 'kind' to the Address 'kind'
         "kinds_map": {

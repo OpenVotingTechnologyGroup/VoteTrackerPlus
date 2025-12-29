@@ -44,13 +44,12 @@ class Contest:
     Note - the contest is a dict with the following set-able keys:
     - choices: a list of choices, each choice is either a string or a dict
       with the keys 'name' and optionally 'party' and 'ticket_names'
-    - tally: the tally type, either 'plurality', 'rcv', or 'pwc'
-    - tally_kind: either 'sequential' or 'proportional'
-    - win_by: currently defunct (was setable).  Support for setting this can
-      re-appear when support for simple contests with non simple majority (say
-      2/3 majority) winners are supported.  So for plurality it is ignored.  For
-      rcv, which is a sequential rcv, it is statically set to '> 50%'.  For
-      p-rcv (proportional rcv), it is set dynamically per open_positions and round.
+    - tally: the tally type, either 'plurality', 'rcv', 'pwc', or 'stv'
+      For multiseat, rcv is a sequential rcv while stv is proportional rcv
+    - win_by: currently defunct though it started out being setable to support
+      non simple majority plurality contests.  For sequential rcv it is statically
+      set to '> 50%'.  For proportional rcv it is set to the Droop quota:
+      (1 / 1 + open_positions) + 1.
     - max_selections: the maximum number of selections a voter may select.  Defaults
       to 1 for plurality and the number of choices for RCV.
     - open_positions: number of open positions.  Defaults to 1 for both plurality and RCV.
@@ -79,7 +78,6 @@ class Contest:
     _config_keys = [
         "choices",
         "tally",
-        "tally_kind",
         "win_by",  # when auto generated a float
         "max_selections",
         "open_positions",
@@ -246,9 +244,6 @@ class Contest:
                     "open_positions must be defined as a non zero postive integer - "
                     "it is not defined"
                 )
-            if "tally_kind" not in a_contest_blob:
-                if a_contest_blob["tally"] == "rcv":
-                    a_contest_blob["tally_kind"] = "sequential"
             if not a_contest_blob["open_positions"].isdigit():
                 raise KeyError(
                     "open_positions must be a non zero postive integer "

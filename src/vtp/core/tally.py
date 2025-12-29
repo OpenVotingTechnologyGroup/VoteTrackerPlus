@@ -19,6 +19,9 @@
 
 import json
 import operator
+from collections import defaultdict
+from fractions import Fraction
+from math import floor
 
 import networkx as nx
 
@@ -848,15 +851,15 @@ class Tally:
         """
         # Maybe override the tally
         if tally_override:
-            if tally_override in ["rcv", "rcv.sequential"]:
-                self.reference_contest["tally"] = "rcv"
-                self.reference_contest["tally_kind"] = "sequential"
-            elif tally_override == "rcv.proportional":
-                self.reference_contest["tally"] = "rcv"
-                self.reference_contest["tally_kind"] = "proportional"
-            else:
+            if tally_override in [
+                "plurality",
+                "rcv",
+                "pwc",
+                "stv",
+            ]:
                 self.reference_contest["tally"] = tally_override
-                self.reference_contest["tally_kind"] = ""
+            else:
+                raise ValueError(f"Invalid value for tally_override ({tally_override})")
 
         # Loop over open seats. For plurality, regardless of open
         # seats there is only one iteration - a check will exit the
@@ -877,6 +880,10 @@ class Tally:
                 )
             elif self.reference_contest["tally"] == "pwc":
                 self.operation_self.imprimir("Running a pairwise Condorcet tally", 0)
+            elif self.reference_contest["tally"] == "stv":
+                # proportional STV is fundementally different in implementation
+                # then all the others.  tally and return
+                self.operation_self.imprimir("Running a proportinal STV tally", 0)
             else:
                 raise NotImplementedError(
                     f"the specified tally ({self.reference_contest['tally']}) "
@@ -888,13 +895,18 @@ class Tally:
                 contest_batch, checks, tally_override
             )
             # If pairwise Condorcet, though contest votes have been
-            # counted, the actual tally is fundementally then either
+            # counted, the actual tally is fundementally different then either
             # plurality or rcv.
             if self.reference_contest["tally"] == "pwc":
-                # record the winner order, print, and return for yucks
-                # anyway
+                # record winner order and call pwc code
                 self.winner_order.append(self.rcv_round[0])
                 self.determine_condorcet_winners()
+                return
+            # same for stv
+            if self.reference_contest["tally"] == "stv":
+                # record winner order and call stv code
+                self.winner_order.append(self.rcv_round[0])
+                self.determine_stv_winners(contest_batch, checks)
                 return
 
             # For all tallies order what has been counted so far (a tuple)
@@ -1108,6 +1120,184 @@ class Tally:
         # Return up to open_positions winners
         seats = int(self.reference_contest.get("open_positions", 1))
         self.operation_self.imprimir(f"Condorcet winner(s): {topo_order[:seats]}", 0)
+
+    # pylint: disable=too-many-locals
+    def determine_stv_winners(
+        self,
+        contest_batch: list,
+        checks: list,
+    ):
+        """
+        Perform an STV tally on a single contest.  This is a complete
+        Droop quota proportional implementation.
+
+        Provides diagnostic printing in a similar manner to the other
+        tallies.
+        """
+
+        ballots = []
+        candidates = set()
+        seats = None
+
+        # ---- Extract ballots ----
+        for a_git_cvr in contest_batch:
+            contest = a_git_cvr["contestCVR"]
+            digest = a_git_cvr["digest"]
+
+            contest_type = contest.get("contest_type")
+            if contest_type not in ("candidate", "ticket"):
+                continue
+
+            if seats is None:
+                seats = int(contest["open_positions"])
+
+            ranking = contest.get("selection", [])
+            if not ranking:
+                continue
+
+            ballots.append(
+                {
+                    "digest": digest,
+                    "ranking": ranking,
+                    "weight": Fraction(1),
+                }
+            )
+            candidates.update(ranking)
+
+        if seats is None:
+            raise ValueError("STV tally invoked with no valid contest")
+
+        continuing = set(candidates)
+        elected = []
+        rounds = []
+
+        # ---- Droop quota ----
+        total_votes = sum(b["weight"] for b in ballots)
+        quota = floor(total_votes / (seats + 1)) + 1
+
+        self.operation_self.imprimir(f"STV quota set to {quota}", 1)
+
+        # ---- Helper: tally current votes ----
+        def tally_current():
+            totals = defaultdict(Fraction)
+            for b in ballots:
+                for choice in b["ranking"]:
+                    if choice in continuing:
+                        totals[choice] += b["weight"]
+                        if b["digest"] in checks:
+                            self.operation_self.imprimir(
+                                f"STV: ballot {b['digest']} counted for {choice} "
+                                f"(weight={b['weight']})",
+                                2,
+                            )
+                        break
+            return totals
+
+        # ---- Main STV loop ----
+        round_num = 1
+        # pylint: disable=too-many-nested-blocks
+        while len(elected) < seats and continuing:
+            self.operation_self.imprimir(f"\nSTV Round {round_num}", 1)
+
+            totals = tally_current()
+
+            rounds.append(
+                {
+                    "round": round_num,
+                    "totals": dict(totals),
+                    "elected": elected.copy(),
+                    "continuing": sorted(continuing),
+                }
+            )
+
+            # ---- Election step ----
+            reached_quota = [c for c in continuing if totals.get(c, 0) >= quota]
+
+            if reached_quota:
+                reached_quota.sort(key=lambda c: totals[c], reverse=True)
+
+                for winner in reached_quota:
+                    if winner not in continuing:
+                        continue
+
+                    self.operation_self.imprimir(
+                        f"STV: {winner} elected with {totals[winner]} votes",
+                        1,
+                    )
+                    elected.append(winner)
+
+                    surplus = totals[winner] - quota
+                    if surplus > 0:
+                        transfer_fraction = surplus / totals[winner]
+                        self.operation_self.imprimir(
+                            f"STV: transferring surplus of {surplus} "
+                            f"(fraction={transfer_fraction}) from {winner}",
+                            2,
+                        )
+
+                        new_ballots = []
+                        for b in ballots:
+                            for choice in b["ranking"]:
+                                if choice == winner:
+                                    transfer_weight = b["weight"] * transfer_fraction
+                                    keep_weight = b["weight"] - transfer_weight
+
+                                    if keep_weight > 0:
+                                        new_ballots.append(
+                                            {
+                                                **b,
+                                                "weight": keep_weight,
+                                            }
+                                        )
+                                    if transfer_weight > 0:
+                                        if b["digest"] in checks:
+                                            self.operation_self.imprimir(
+                                                f"STV: ballot {b['digest']} "
+                                                f"surplus transfer from {winner} "
+                                                f"(weight={transfer_weight})",
+                                                2,
+                                            )
+                                        new_ballots.append(
+                                            {
+                                                **b,
+                                                "weight": transfer_weight,
+                                            }
+                                        )
+                                    break
+                                if choice in continuing:
+                                    new_ballots.append(b)
+                                    break
+                            else:
+                                new_ballots.append(b)
+
+                        ballots = new_ballots
+
+                    continuing.remove(winner)
+                    if len(elected) >= seats:
+                        break
+            else:
+                # ---- Elimination step ----
+                loser = min(continuing, key=lambda c: totals.get(c, 0))
+                self.operation_self.imprimir(
+                    f"STV: eliminating {loser} with {totals.get(loser, 0)} votes",
+                    1,
+                )
+                continuing.remove(loser)
+
+                for b in ballots:
+                    if b["digest"] in checks:
+                        self.operation_self.imprimir(
+                            f"STV: ballot {b['digest']} recast after elimination of {loser}",
+                            2,
+                        )
+
+            round_num += 1
+
+        return {
+            "quota": quota,
+            "elected": elected,
+            "rounds": rounds,
+        }
 
 
 # EOF

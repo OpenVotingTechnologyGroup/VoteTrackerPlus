@@ -73,7 +73,7 @@ tallying across git submodules/repos.
     parser.add_argument(
         "--tally_override",
         default="",
-        help="specify a specific tally to use (plurality, rcv, pwc)",
+        help="specify a specific tally to use (plurality, rcv, pwc, stv)",
     )
     Arguments.add_output_style(parser)
     Arguments.add_verbosity(parser)
