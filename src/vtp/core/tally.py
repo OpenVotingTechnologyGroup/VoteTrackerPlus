@@ -801,7 +801,7 @@ class Tally:
                 self.tally_a_plurality_contest(
                     contest, provenance_digest, vote_count, digest
                 )
-            elif tally_override in ["rcv", "rcv.sequential", "rcv.proportional"] or (
+            elif tally_override == "rcv" or (
                 tally_override == "" and contest["tally"] == "rcv"
             ):
                 # parse_and_tally_a_contest will be called once at the
@@ -890,7 +890,16 @@ class Tally:
                     "is not yet implemented"
                 )
 
-            # parse all the CVRs and create the first round of tallys
+            # stv is a completely separate tally implementation from that of
+            # rcv and plurality implementations
+            if self.reference_contest["tally"] == "stv":
+                # record winner order and call stv code
+                self.winner_order.append(self.rcv_round[0])
+                self.determine_stv_winners(contest_batch, checks)
+                return
+
+            # parse all the CVRs and create the first round of tallys.
+            # stv tallies do not leverage parse_and_tally_a_contest.
             total_votes = self.parse_and_tally_a_contest(
                 contest_batch, checks, tally_override
             )
@@ -901,12 +910,6 @@ class Tally:
                 # record winner order and call pwc code
                 self.winner_order.append(self.rcv_round[0])
                 self.determine_condorcet_winners()
-                return
-            # same for stv
-            if self.reference_contest["tally"] == "stv":
-                # record winner order and call stv code
-                self.winner_order.append(self.rcv_round[0])
-                self.determine_stv_winners(contest_batch, checks)
                 return
 
             # For all tallies order what has been counted so far (a tuple)
@@ -1137,24 +1140,13 @@ class Tally:
 
         ballots = []
         candidates = set()
-        seats = None
+        seats = int(self.reference_contest.get("open_positions", 1))
 
         # ---- Extract ballots ----
         for a_git_cvr in contest_batch:
             contest = a_git_cvr["contestCVR"]
             digest = a_git_cvr["digest"]
-
-            contest_type = contest.get("contest_type")
-            if contest_type not in ("candidate", "ticket"):
-                continue
-
-            if seats is None:
-                seats = int(contest["open_positions"])
-
             ranking = contest.get("selection", [])
-            if not ranking:
-                continue
-
             ballots.append(
                 {
                     "digest": digest,
@@ -1175,20 +1167,20 @@ class Tally:
         total_votes = sum(b["weight"] for b in ballots)
         quota = floor(total_votes / (seats + 1)) + 1
 
-        self.operation_self.imprimir(f"STV quota set to {quota}", 1)
+        self.operation_self.imprimir(f"STV quota set to {quota}", 0)
 
         # ---- Helper: tally current votes ----
         def tally_current():
             totals = defaultdict(Fraction)
-            for b in ballots:
+            for b, count in enumerate(ballots):
                 for choice in b["ranking"]:
                     if choice in continuing:
                         totals[choice] += b["weight"]
-                        if b["digest"] in checks:
+                        if b["digest"] in checks or self.operation_self.verbosity >= 4:
                             self.operation_self.imprimir(
-                                f"STV: ballot {b['digest']} counted for {choice} "
+                                f"STV: ballot {count+1} ({b['digest']}) counted for {choice} "
                                 f"(weight={b['weight']})",
-                                2,
+                                0,
                             )
                         break
             return totals
@@ -1197,7 +1189,7 @@ class Tally:
         round_num = 1
         # pylint: disable=too-many-nested-blocks
         while len(elected) < seats and continuing:
-            self.operation_self.imprimir(f"\nSTV Round {round_num}", 1)
+            self.operation_self.imprimir(f"\nSTV Round {round_num}", 0)
 
             totals = tally_current()
 
@@ -1222,7 +1214,7 @@ class Tally:
 
                     self.operation_self.imprimir(
                         f"STV: {winner} elected with {totals[winner]} votes",
-                        1,
+                        0,
                     )
                     elected.append(winner)
 
@@ -1232,7 +1224,7 @@ class Tally:
                         self.operation_self.imprimir(
                             f"STV: transferring surplus of {surplus} "
                             f"(fraction={transfer_fraction}) from {winner}",
-                            2,
+                            0,
                         )
 
                         new_ballots = []
@@ -1250,12 +1242,12 @@ class Tally:
                                             }
                                         )
                                     if transfer_weight > 0:
-                                        if b["digest"] in checks:
+                                        if b["digest"] in checks or self.operation_self.verbosity >= 4:
                                             self.operation_self.imprimir(
                                                 f"STV: ballot {b['digest']} "
                                                 f"surplus transfer from {winner} "
                                                 f"(weight={transfer_weight})",
-                                                2,
+                                                0,
                                             )
                                         new_ballots.append(
                                             {
@@ -1280,15 +1272,15 @@ class Tally:
                 loser = min(continuing, key=lambda c: totals.get(c, 0))
                 self.operation_self.imprimir(
                     f"STV: eliminating {loser} with {totals.get(loser, 0)} votes",
-                    1,
+                    0,
                 )
                 continuing.remove(loser)
-
+                import pdb; pdb.set_trace()
                 for b in ballots:
-                    if b["digest"] in checks:
+                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
                         self.operation_self.imprimir(
-                            f"STV: ballot {b['digest']} recast after elimination of {loser}",
-                            2,
+                            f"STV: ballot {b['digest']} recast from {loser} to ",
+                            0,
                         )
 
             round_num += 1
