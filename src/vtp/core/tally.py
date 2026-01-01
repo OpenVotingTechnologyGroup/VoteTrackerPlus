@@ -1172,7 +1172,7 @@ class Tally:
         # ---- Helper: tally current votes ----
         def tally_current():
             totals = defaultdict(Fraction)
-            for b, count in enumerate(ballots):
+            for count, b in enumerate(ballots):
                 for choice in b["ranking"]:
                     if choice in continuing:
                         totals[choice] += b["weight"]
@@ -1183,6 +1183,11 @@ class Tally:
                                 0,
                             )
                         break
+                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                        self.operation_self.imprimir(
+                            f"STV: ballot {count+1} ({b['digest']}) {choice} is no longer continuing - skipping",
+                            0,
+                        )
             return totals
 
         # ---- Main STV loop ----
@@ -1265,6 +1270,10 @@ class Tally:
                         ballots = new_ballots
 
                     continuing.remove(winner)
+                    self.operation_self.imprimir(
+                        f"STV: removing winner {winner} from further consideration",
+                        0,
+                    )
                     if len(elected) >= seats:
                         break
             else:
@@ -1275,15 +1284,32 @@ class Tally:
                     0,
                 )
                 continuing.remove(loser)
-                import pdb; pdb.set_trace()
-                for b in ballots:
-                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
-                        self.operation_self.imprimir(
-                            f"STV: ballot {b['digest']} recast from {loser} to ",
-                            0,
-                        )
-
             round_num += 1
+
+        # Print summary
+        # import pdb; pdb.set_trace()
+        self.operation_self.imprimir(
+            f"\nSTV summary:\nTotal Votes = {total_votes}; Quota = {quota}\n"
+            f"Elected = {elected}\n\n"
+            f"Round Details:",
+            0,
+        )
+        # Note - best if totals are always sorted in choices order
+        candidates = Contest.get_choices_from_contest(self.reference_contest["choices"])
+        candidate_order = {k: i for i, k in enumerate(candidates)}
+        for thing in rounds:
+            self.operation_self.imprimir(
+                f"Round {thing['round']}:\n"
+                f"  Continuing: {thing['continuing']}\n"
+                f"  Totals:",
+                0,
+            )
+            # for candidate in thing["totals"]:
+            for candidate in sorted(thing["totals"], key=lambda k: candidate_order[k]):
+                self.operation_self.imprimir(
+                    f"    {candidate}: {thing['totals'][candidate]}",
+                    0,
+                )
 
         return {
             "quota": quota,
