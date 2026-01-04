@@ -1,8 +1,10 @@
-## A Quick Comparison of Plurality, sequential RCV, and Condorcet Tallies
+## A Quick Comparison of Plurality, sequential & proportional RCV, and Condorcet Election Contest Tallies
 
 What follows is the printout (what terminal applications such as [MacOS Terminal](https://en.wikipedia.org/wiki/PowerShell) or [Windows PowerShell](https://en.wikipedia.org/wiki/PowerShell) will display) of four different election contest tallies over the same data.  The data is a multi-seat contest selecting <u>three winners from six contestants</u>.  For plurality the ranking is effectively ignored - there is only one tally round that considers only the first three choices as equal choices.
 
-The first tally below is [plurality](https://en.wikipedia.org/wiki/Plurality_(voting)), the second is [Ranked Choice Vote](https://en.wikipedia.org/wiki/Ranked_voting) (a [sequential RCV implementation](https://fairvote.org/proportional-ranked-choice-voting-vs-sequential-ranked-choice-voting/)), the third is [pairwise Condorcet](https://en.wikipedia.org/wiki/Condorcet_method), and the fourth is a proportional RCV or STV implementation, specifically a [Weighted Inclusive Gregory Method](https://prfound.org/resources/reference/) as used for example by the city of Minneapolis, USA.  (For more info on multi seat RCV in the US, consult internet searches or [this link](https://www.rcvresources.org/types-of-rcv).)  VoteTrackerPlus is a [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) election system implementation similar to blockchain and cryptocurrencies but also fundementally different as there are no private keys of ownership - the ballot contest cryptographic signatures are completely anonymous, each contest on a voter's ballot receiving its own unique and anonymous digital signature.  In this way each contest vote can be referenced by its signature.  When tallying a contest, to be able to support election transparency, signatures can be supplied to the tally which will then track all the tally events associated with that specific vote.
+The first tally below is [plurality](https://en.wikipedia.org/wiki/Plurality_(voting)); the second is a [sequential implementation](https://fairvote.org/proportional-ranked-choice-voting-vs-sequential-ranked-choice-voting/) of [Ranked Choice Voting](https://en.wikipedia.org/wiki/Ranked_voting); the third is a proportional RCV (a.k.a. STV) implementation, specifically a [Weighted Inclusive Gregory Method](https://prfound.org/resources/reference/) as used for example by the city of Minneapolis (for more info on multi seat RCV in the US, consult internet searches or [this link](https://www.rcvresources.org/types-of-rcv)); and the fourth is [pairwise Condorcet](https://en.wikipedia.org/wiki/Condorcet_method) contest tally.
+
+VoteTrackerPlus is a [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) election system implementation similar to blockchain and cryptocurrencies but also fundementally different as there are no private keys of ownership - the ballot contest cryptographic signatures are completely anonymous, each contest on a voter's ballot receiving its own unique and anonymous digital signature.  In this way each contest vote can be referenced by its signature.  When tallying a contest, to be able to support election transparency, signatures can be supplied to the tally which will then track all the tally events associated with that specific vote.
 
 In the below example, the first contest digital signature, [e92c62931cedfe0607865c624c178ecfc64cfd97](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.sRCV.1/commit/e92c62931cedfe0607865c624c178ecfc64cfd97), is for a ballot where the voter ranked all 6 candidates.  The ballot is counted as the 210 vote in the election.  With the second digest, [08e29630567c00e2e8887c089072d1edf3a92215](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.sRCV.1/commit/08e29630567c00e2e8887c089072d1edf3a92215), the voter only selected a single candidate and did not supply any further ranking information.  That ballot is counted as the 224th vote in the election.
 
@@ -194,52 +196,6 @@ Final rcv round results for contest Select Board (uid=0001):
 Winner(s): Betty Beta, Anthony Alpha, David Delta
 ```
 
-## Pairwise Condorcet
-```
-% tally-contests -c 0001 -t e92c62931cedfe0607865c624c178ecfc64cfd97,08e29630567c00e2e8887c089072d1edf3a92215 --tally_override pwc
-Scanned 224 votes for contest (Select Board) uid=0001, tally=rcv, open_positions=3, max_selections=6 
-Running a pairwise Condorcet tally
-Pairwise ranking for ballot vote 210 (e92c62931cedfe0607865c624c178ecfc64cfd97): {'Gloria Gamma': 0, 'Anthony Alpha': 1, 'Betty Beta': 2, 'David Delta': 3, 'Emily Echo': 4, 'Francis Foxtrot': 5}
-Pairwise vote 101 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Betty Beta')
-Pairwise vote 113 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'David Delta')
-Pairwise vote 109 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Emily Echo')
-Pairwise vote 112 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Francis Foxtrot')
-Pairwise vote 108 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'David Delta')
-Pairwise vote 112 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'Emily Echo')
-Pairwise vote 110 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'Francis Foxtrot')
-Pairwise vote 101 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Anthony Alpha')
-Pairwise vote 107 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Betty Beta')
-Pairwise vote 114 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'David Delta')
-Pairwise vote 108 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Emily Echo')
-Pairwise vote 105 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Francis Foxtrot')
-Pairwise vote 107 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('David Delta', 'Emily Echo')
-Pairwise vote 111 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('David Delta', 'Francis Foxtrot')
-Pairwise vote 114 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Emily Echo', 'Francis Foxtrot')
-Pairwise ranking for ballot vote 224 (08e29630567c00e2e8887c089072d1edf3a92215): {'Francis Foxtrot': 0}
-Pairwise vote 105 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Anthony Alpha')
-Pairwise vote 107 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Betty Beta')
-Pairwise vote 111 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Gloria Gamma')
-Pairwise vote 106 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'David Delta')
-Pairwise vote 101 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Emily Echo')
-Creating 6 node Condorcet directed acyclic graph to determine winners:
-Adding edge Emily Echo -> Francis Foxtrot (margin=20, 121-101)
-Adding edge Anthony Alpha -> David Delta (margin=17, 119-102)
-Adding edge Gloria Gamma -> David Delta (margin=17, 119-102)
-Adding edge Betty Beta -> Emily Echo (margin=16, 119-103)
-Adding edge Anthony Alpha -> Francis Foxtrot (margin=12, 117-105)
-Adding edge David Delta -> Francis Foxtrot (margin=10, 116-106)
-Adding edge Betty Beta -> Francis Foxtrot (margin=9, 116-107)
-Adding edge Anthony Alpha -> Gloria Gamma (margin=9, 115-106)
-Adding edge Anthony Alpha -> Emily Echo (margin=9, 115-106)
-Adding edge Betty Beta -> Anthony Alpha (margin=8, 115-107)
-Adding edge Gloria Gamma -> Emily Echo (margin=5, 113-108)
-Adding edge Betty Beta -> David Delta (margin=4, 113-109)
-Skipping edge Gloria Gamma -> Betty Beta (margin=4, 113-109) to avoid cycle
-Adding edge David Delta -> Emily Echo (margin=3, 112-109)
-Condorcet topological order: Betty Beta, Anthony Alpha, Gloria Gamma, David Delta, Emily Echo, Francis Foxtrot
-Condorcet winner(s): ['Betty Beta', 'Anthony Alpha', 'Gloria Gamma']
-```
-
 ## Proportional RCV (a.k.a STV, a Weighted Inclusive Gregory Method implementation)
 ```
 % tally-contests -c 0001 -t d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb --tally_override stv
@@ -298,4 +254,50 @@ Round 4:
     David Delta: 75
     Emily Echo: 72
 Election Final: ['Anthony Alpha', 'Betty Beta', 'David Delta']
+```
+
+## Pairwise Condorcet
+```
+% tally-contests -c 0001 -t e92c62931cedfe0607865c624c178ecfc64cfd97,08e29630567c00e2e8887c089072d1edf3a92215 --tally_override pwc
+Scanned 224 votes for contest (Select Board) uid=0001, tally=rcv, open_positions=3, max_selections=6 
+Running a pairwise Condorcet tally
+Pairwise ranking for ballot vote 210 (e92c62931cedfe0607865c624c178ecfc64cfd97): {'Gloria Gamma': 0, 'Anthony Alpha': 1, 'Betty Beta': 2, 'David Delta': 3, 'Emily Echo': 4, 'Francis Foxtrot': 5}
+Pairwise vote 101 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Betty Beta')
+Pairwise vote 113 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'David Delta')
+Pairwise vote 109 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Emily Echo')
+Pairwise vote 112 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Anthony Alpha', 'Francis Foxtrot')
+Pairwise vote 108 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'David Delta')
+Pairwise vote 112 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'Emily Echo')
+Pairwise vote 110 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Betty Beta', 'Francis Foxtrot')
+Pairwise vote 101 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Anthony Alpha')
+Pairwise vote 107 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Betty Beta')
+Pairwise vote 114 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'David Delta')
+Pairwise vote 108 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Emily Echo')
+Pairwise vote 105 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Gloria Gamma', 'Francis Foxtrot')
+Pairwise vote 107 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('David Delta', 'Emily Echo')
+Pairwise vote 111 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('David Delta', 'Francis Foxtrot')
+Pairwise vote 114 (e92c62931cedfe0607865c624c178ecfc64cfd97) for ('Emily Echo', 'Francis Foxtrot')
+Pairwise ranking for ballot vote 224 (08e29630567c00e2e8887c089072d1edf3a92215): {'Francis Foxtrot': 0}
+Pairwise vote 105 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Anthony Alpha')
+Pairwise vote 107 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Betty Beta')
+Pairwise vote 111 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Gloria Gamma')
+Pairwise vote 106 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'David Delta')
+Pairwise vote 101 (08e29630567c00e2e8887c089072d1edf3a92215) for ('Francis Foxtrot', 'Emily Echo')
+Creating 6 node Condorcet directed acyclic graph to determine winners:
+Adding edge Emily Echo -> Francis Foxtrot (margin=20, 121-101)
+Adding edge Anthony Alpha -> David Delta (margin=17, 119-102)
+Adding edge Gloria Gamma -> David Delta (margin=17, 119-102)
+Adding edge Betty Beta -> Emily Echo (margin=16, 119-103)
+Adding edge Anthony Alpha -> Francis Foxtrot (margin=12, 117-105)
+Adding edge David Delta -> Francis Foxtrot (margin=10, 116-106)
+Adding edge Betty Beta -> Francis Foxtrot (margin=9, 116-107)
+Adding edge Anthony Alpha -> Gloria Gamma (margin=9, 115-106)
+Adding edge Anthony Alpha -> Emily Echo (margin=9, 115-106)
+Adding edge Betty Beta -> Anthony Alpha (margin=8, 115-107)
+Adding edge Gloria Gamma -> Emily Echo (margin=5, 113-108)
+Adding edge Betty Beta -> David Delta (margin=4, 113-109)
+Skipping edge Gloria Gamma -> Betty Beta (margin=4, 113-109) to avoid cycle
+Adding edge David Delta -> Emily Echo (margin=3, 112-109)
+Condorcet topological order: Betty Beta, Anthony Alpha, Gloria Gamma, David Delta, Emily Echo, Francis Foxtrot
+Condorcet winner(s): ['Betty Beta', 'Anthony Alpha', 'Gloria Gamma']
 ```
