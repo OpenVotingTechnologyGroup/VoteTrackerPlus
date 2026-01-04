@@ -631,7 +631,7 @@ class Tally:
         else:
             self.operation_self.imprimir_formatting("horizontal_line")
         self.operation_self.imprimir(
-            f"RCV: round {this_round}, {Globals.make_ordinal(seat)} seat", 0
+            f"RCV: round {this_round}, {Globals.make_ordinal(seat)} seat", 3
         )
 
         # ZZZ - create a function to validate incoming last place
@@ -693,7 +693,7 @@ class Tally:
         total_current_vote_count = self.get_total_vote_count(this_round)
         self.operation_self.imprimir(
             f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
-            0,
+            3,
         )
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
@@ -946,7 +946,7 @@ class Tally:
             total_current_vote_count = self.get_total_vote_count(0)
             self.operation_self.imprimir(
                 f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
-                0,
+                3,
             )
             # When multiseat RCV, print multiseat RCV header
             if int(self.reference_contest["open_positions"]) > 1:
@@ -1180,13 +1180,13 @@ class Tally:
                             self.operation_self.imprimir(
                                 f"STV: ballot {count+1} ({b['digest']}) counted for {choice} "
                                 f"(weight={b['weight']})",
-                                0,
+                                3,
                             )
                         break
                     if b["digest"] in checks or self.operation_self.verbosity >= 4:
                         self.operation_self.imprimir(
                             f"STV: ballot {count+1} ({b['digest']}) {choice} is no longer continuing - skipping",
-                            0,
+                            3,
                         )
             return totals
 
@@ -1194,7 +1194,7 @@ class Tally:
         round_num = 1
         # pylint: disable=too-many-nested-blocks
         while len(elected) < seats and continuing:
-            self.operation_self.imprimir(f"\nSTV Round {round_num}", 0)
+            self.operation_self.imprimir(f"\nSTV Round {round_num}", 4)
 
             totals = tally_current()
 
@@ -1219,7 +1219,7 @@ class Tally:
 
                     self.operation_self.imprimir(
                         f"STV: {winner} elected with {totals[winner]} votes",
-                        0,
+                        4,
                     )
                     elected.append(winner)
 
@@ -1229,7 +1229,7 @@ class Tally:
                         self.operation_self.imprimir(
                             f"STV: transferring surplus of {surplus} "
                             f"(fraction={transfer_fraction}) from {winner}",
-                            0,
+                            4,
                         )
 
                         new_ballots = []
@@ -1252,7 +1252,7 @@ class Tally:
                                                 f"STV: ballot {b['digest']} "
                                                 f"surplus transfer from {winner} "
                                                 f"(weight={transfer_weight})",
-                                                0,
+                                                3,
                                             )
                                         new_ballots.append(
                                             {
@@ -1272,7 +1272,7 @@ class Tally:
                     continuing.remove(winner)
                     self.operation_self.imprimir(
                         f"STV: removing winner {winner} from further consideration",
-                        0,
+                        3,
                     )
                     if len(elected) >= seats:
                         break
@@ -1281,7 +1281,7 @@ class Tally:
                 loser = min(continuing, key=lambda c: totals.get(c, 0))
                 self.operation_self.imprimir(
                     f"STV: eliminating {loser} with {totals.get(loser, 0)} votes",
-                    0,
+                    4,
                 )
                 continuing.remove(loser)
             round_num += 1
@@ -1292,7 +1292,7 @@ class Tally:
             f"\nSTV summary:\nTotal Votes = {total_votes}; Quota = {quota}\n"
             f"Elected = {elected}\n\n"
             f"Round Details:",
-            0,
+            3,
         )
         # Note - best if totals are always sorted in choices order
         candidates = Contest.get_choices_from_contest(self.reference_contest["choices"])
@@ -1302,14 +1302,18 @@ class Tally:
                 f"Round {thing['round']}:\n"
                 f"  Continuing: {thing['continuing']}\n"
                 f"  Totals:",
-                0,
+                3,
             )
             # for candidate in thing["totals"]:
             for candidate in sorted(thing["totals"], key=lambda k: candidate_order[k]):
                 self.operation_self.imprimir(
                     f"    {candidate}: {thing['totals'][candidate]}",
-                    0,
+                    3,
                 )
+        self.operation_self.imprimir(
+            f"Election Final: {elected}",
+            0,
+        )
 
         return {
             "quota": quota,
