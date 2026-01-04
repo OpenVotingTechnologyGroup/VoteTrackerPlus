@@ -1,8 +1,8 @@
 ## A Quick Comparison of Plurality, sequential RCV, and Condorcet Tallies
 
-What follows is the printout (what terminal applications such as [MacOS Terminal](https://en.wikipedia.org/wiki/PowerShell) or [Windows PowerShell](https://en.wikipedia.org/wiki/PowerShell) will display) of three different contest tallies over the same data.  The data is a multi-seat contest selecting <u>three winners from six contestants</u>.
+What follows is the printout (what terminal applications such as [MacOS Terminal](https://en.wikipedia.org/wiki/PowerShell) or [Windows PowerShell](https://en.wikipedia.org/wiki/PowerShell) will display) of four different election contest tallies over the same data.  The data is a multi-seat contest selecting <u>three winners from six contestants</u>.  For plurality the ranking is effectively ignored - there is only one tally round that considers only the first three choices as equal choices.
 
-The first tally below is [plurality](https://en.wikipedia.org/wiki/Plurality_(voting)), the second is [Ranked Choice Vote](https://en.wikipedia.org/wiki/Ranked_voting) (a [sequential RCV implementation](https://fairvote.org/proportional-ranked-choice-voting-vs-sequential-ranked-choice-voting/)), and the third is [pairwise Condorcet](https://en.wikipedia.org/wiki/Condorcet_method).  VoteTrackerPlus is a [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) election system implementation similar to blockchain and cryptocurrencies but also fundementally different as there are no private keys of ownership - the ballot contest cryptographic signatures are completely anonymous, each contest on a voter's ballot receiving its own unique and anonymous digital signature.  In this way each contest vote can be referenced by its signature.  When tallying a contest, to be able to support election transparency, signatures can be supplied to the tally which will then track all the tally events associated with that specific vote.
+The first tally below is [plurality](https://en.wikipedia.org/wiki/Plurality_(voting)), the second is [Ranked Choice Vote](https://en.wikipedia.org/wiki/Ranked_voting) (a [sequential RCV implementation](https://fairvote.org/proportional-ranked-choice-voting-vs-sequential-ranked-choice-voting/)), the third is [pairwise Condorcet](https://en.wikipedia.org/wiki/Condorcet_method), and the fourth is a proportional RCV or STV implementation, specifically a [Weighted Inclusive Gregory Method](https://prfound.org/resources/reference/) as used for example by the city of Minneapolis, USA.  (For more info on multi seat RCV in the US, consult internet searches or [this link](https://www.rcvresources.org/types-of-rcv).)  VoteTrackerPlus is a [Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree) election system implementation similar to blockchain and cryptocurrencies but also fundementally different as there are no private keys of ownership - the ballot contest cryptographic signatures are completely anonymous, each contest on a voter's ballot receiving its own unique and anonymous digital signature.  In this way each contest vote can be referenced by its signature.  When tallying a contest, to be able to support election transparency, signatures can be supplied to the tally which will then track all the tally events associated with that specific vote.
 
 In the below example, the first contest digital signature, [e92c62931cedfe0607865c624c178ecfc64cfd97](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.sRCV.1/commit/e92c62931cedfe0607865c624c178ecfc64cfd97), is for a ballot where the voter ranked all 6 candidates.  The ballot is counted as the 210 vote in the election.  With the second digest, [08e29630567c00e2e8887c089072d1edf3a92215](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.sRCV.1/commit/08e29630567c00e2e8887c089072d1edf3a92215), the voter only selected a single candidate and did not supply any further ranking information.  That ballot is counted as the 224th vote in the election.
 
@@ -238,4 +238,64 @@ Skipping edge Gloria Gamma -> Betty Beta (margin=4, 113-109) to avoid cycle
 Adding edge David Delta -> Emily Echo (margin=3, 112-109)
 Condorcet topological order: Betty Beta, Anthony Alpha, Gloria Gamma, David Delta, Emily Echo, Francis Foxtrot
 Condorcet winner(s): ['Betty Beta', 'Anthony Alpha', 'Gloria Gamma']
+```
+
+## Proportional RCV (a.k.a STV, a Weighted Inclusive Gregory Method implementation)
+```
+% tally-contests -c 0001 -t d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb --tally_override stv
+Scanned 224 votes for contest (Select Board) uid=0001, tally=rcv, open_positions=3, max_selections=6 
+Running a proportinal STV tally
+STV quota set to 57
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from Anthony Alpha (weight=4/61)
+STV: removing winner Anthony Alpha from further consideration
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
+STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for David Delta (weight=57/61)
+STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
+STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
+STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for David Delta (weight=4/61)
+STV: removing winner Betty Beta from further consideration
+STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from David Delta (weight=342/1525)
+STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from David Delta (weight=24/1525)
+STV: removing winner David Delta from further consideration
+
+STV summary:
+Total Votes = 224; Quota = 57
+Elected = ['Anthony Alpha', 'Betty Beta', 'David Delta']
+
+Round Details:
+Round 1:
+  Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo', 'Francis Foxtrot', 'Gloria Gamma']
+  Totals:
+    Anthony Alpha: 45
+    Betty Beta: 40
+    Gloria Gamma: 34
+    David Delta: 34
+    Emily Echo: 38
+    Francis Foxtrot: 32
+Round 2:
+  Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo', 'Gloria Gamma']
+  Totals:
+    Anthony Alpha: 50
+    Betty Beta: 45
+    Gloria Gamma: 40
+    David Delta: 43
+    Emily Echo: 44
+Round 3:
+  Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo']
+  Totals:
+    Anthony Alpha: 61
+    Betty Beta: 55
+    David Delta: 52
+    Emily Echo: 54
+Round 4:
+  Continuing: ['Betty Beta', 'David Delta', 'Emily Echo']
+  Totals:
+    Betty Beta: 75
+    David Delta: 75
+    Emily Echo: 72
+Election Final: ['Anthony Alpha', 'Betty Beta', 'David Delta']
 ```
