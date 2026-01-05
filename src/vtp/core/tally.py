@@ -1195,9 +1195,21 @@ class Tally:
         # pylint: disable=too-many-nested-blocks
         while len(elected) < seats and continuing:
             self.operation_self.imprimir(f"\nSTV Round {round_num}", 4)
+            # ---- Diagnostic: ballot state at start of round ----
+            locked_weight = sum(
+                b["weight"] for b in ballots if not b.get("ranking")
+            )
+            active_weight = sum(
+                b["weight"] for b in ballots if b.get("ranking")
+            )
+            self.operation_self.imprimir(
+                f"STV Round {round_num}: ballot weight state — "
+                f"locked={locked_weight}, active={active_weight}, "
+                f"total={locked_weight + active_weight}",
+                3,
+            )
 
             totals = tally_current()
-
             rounds.append(
                 {
                     "round": round_num,
@@ -1219,55 +1231,101 @@ class Tally:
 
                     self.operation_self.imprimir(
                         f"STV: {winner} elected with {totals[winner]} votes",
-                        4,
+                        0,
                     )
                     elected.append(winner)
 
                     surplus = totals[winner] - quota
+
                     if surplus > 0:
                         transfer_fraction = surplus / totals[winner]
+
+                        # ---- Diagnostic: total weight BEFORE surplus transfer ----
+                        total_weight_before = sum(b["weight"] for b in ballots)
+
                         self.operation_self.imprimir(
                             f"STV: transferring surplus of {surplus} "
                             f"(fraction={transfer_fraction}) from {winner}",
-                            4,
+                            3,
+                        )
+                        self.operation_self.imprimir(
+                            f"STV: total ballot weight BEFORE transfer = {total_weight_before}",
+                            3,
                         )
 
                         new_ballots = []
                         for b in ballots:
+                            # Determine current active choice for this ballot
+                            current_choice = None
                             for choice in b["ranking"]:
-                                if choice == winner:
-                                    transfer_weight = b["weight"] * transfer_fraction
-                                    keep_weight = b["weight"] - transfer_weight
-
-                                    if keep_weight > 0:
-                                        new_ballots.append(
-                                            {
-                                                **b,
-                                                "weight": keep_weight,
-                                            }
-                                        )
-                                    if transfer_weight > 0:
-                                        if b["digest"] in checks or self.operation_self.verbosity >= 4:
-                                            self.operation_self.imprimir(
-                                                f"STV: ballot {b['digest']} "
-                                                f"surplus transfer from {winner} "
-                                                f"(weight={transfer_weight})",
-                                                3,
-                                            )
-                                        new_ballots.append(
-                                            {
-                                                **b,
-                                                "weight": transfer_weight,
-                                            }
-                                        )
-                                    break
                                 if choice in continuing:
-                                    new_ballots.append(b)
+                                    # ballot is active
+                                    current_choice = choice
                                     break
+                                # else ballot is exhausted
+
+                            if current_choice == winner:
+                                # ---- Split ballot ----
+                                transfer_weight = b["weight"] * transfer_fraction
+                                keep_weight = b["weight"] - transfer_weight
+                                if keep_weight > 0:
+                                    new_ballots.append(
+                                        {
+                                            **b,
+                                            "weight": keep_weight,
+                                            "ranking": [],  # quota-locked ballot
+                                        }
+                                    )
+                                if transfer_weight > 0:
+                                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                                        self.operation_self.imprimir(
+                                            f"STV: ballot {b['digest']} "
+                                            f"surplus transfer from {winner} "
+                                            f"(weight={transfer_weight})",
+                                            3,
+                                        )
+                                    new_ballots.append(
+                                        {
+                                            **b,
+                                            "weight": transfer_weight,
+                                        }
+                                    )
                             else:
+                                # ---- Ballot unaffected by this surplus transfer ----
                                 new_ballots.append(b)
 
                         ballots = new_ballots
+                        # ---- Diagnostic: locked vs active ballot weight after surplus transfer ----
+                        locked_weight = sum(
+                            b["weight"] for b in ballots if not b.get("ranking")
+                        )
+                        active_weight = sum(
+                            b["weight"] for b in ballots if b.get("ranking")
+                        )
+                        self.operation_self.imprimir(
+                            f"STV: post-transfer ballot weights — "
+                            f"locked={locked_weight}, active={active_weight}, "
+                            f"total={locked_weight + active_weight}",
+                            3,
+                        )
+                        # ---- Diagnostic: total weight AFTER surplus transfer ----
+                        total_weight_after = sum(b["weight"] for b in ballots)
+                        self.operation_self.imprimir(
+                            f"STV: total ballot weight AFTER transfer = {total_weight_after}",
+                            3,
+                        )
+
+                        # ==========================================================
+                        # WEIGHT CONSERVATION ASSERTION
+                        #
+                        # Surplus transfer must not create or destroy vote weight.
+                        # Any failure here indicates a logic error or double counting.
+                        # ==========================================================
+                        assert total_weight_before == total_weight_after, (
+                            "STV ERROR: total ballot weight changed during surplus transfer "
+                            f"(before={total_weight_before}, after={total_weight_after})",
+                            0,
+                        )
 
                     continuing.remove(winner)
                     self.operation_self.imprimir(
@@ -1281,7 +1339,7 @@ class Tally:
                 loser = min(continuing, key=lambda c: totals.get(c, 0))
                 self.operation_self.imprimir(
                     f"STV: eliminating {loser} with {totals.get(loser, 0)} votes",
-                    4,
+                    3,
                 )
                 continuing.remove(loser)
             round_num += 1
