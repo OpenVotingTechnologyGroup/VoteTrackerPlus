@@ -201,29 +201,63 @@ Winner(s): Betty Beta, Anthony Alpha, David Delta
 % tally-contests -c 0001 -t d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb --tally_override stv
 Scanned 224 votes for contest (Select Board) uid=0001, tally=rcv, open_positions=3, max_selections=6 
 Running a proportinal STV tally
-STV quota set to 57
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
-STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from Anthony Alpha (weight=4/61)
-STV: removing winner Anthony Alpha from further consideration
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
-STV: ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for David Delta (weight=57/61)
-STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
-STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
-STV: ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for David Delta (weight=4/61)
-STV: removing winner Betty Beta from further consideration
-STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from David Delta (weight=342/1525)
-STV: ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from David Delta (weight=24/1525)
-STV: removing winner David Delta from further consideration
+STV: quota set to 57
+  ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+  found 1 blank ballot(s) (weight=1) marking as exhausted
+STV: Round 1: ballot weight state — locked=1, active=223, total=224
+  eliminating Francis Foxtrot with 32 votes
+  ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+  exhaustion detected — 2 ballots, total exhausted weight=2
+STV: Round 2: ballot weight state — locked=1, active=223, total=224
+  eliminating Gloria Gamma with 40 votes
+  ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Anthony Alpha (weight=1)
+  exhaustion detected — 2 ballots, total exhausted weight=2
+STV: Round 3: ballot weight state — locked=1, active=223, total=224
+  Anthony Alpha elected with 61 votes
+  transferring surplus of 4 (fraction=4/61) from Anthony Alpha
+  total ballot weight BEFORE transfer = 224
+  ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from Anthony Alpha (weight=4/61)
+  post-transfer ballot weights — locked=58, active=166, total=224
+  total ballot weight AFTER transfer = 224
+  surplus accounting for Anthony Alpha — locked_to_quota=57, transferable_surplus=166
+  removing winner Anthony Alpha from further consideration
+  ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) EXHAUSTED (weight=57/61)
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for David Delta (weight=4/61)
+  exhaustion detected — 63 ballots, total exhausted weight=59
+STV: Round 4: ballot weight state — locked=58, active=166, total=224
+  eliminating David Delta with 53 31/61 votes
+  ballot 4 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) EXHAUSTED (weight=57/61)
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Anthony Alpha is no longer continuing - skipping
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) Gloria Gamma is no longer continuing - skipping
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) David Delta is no longer continuing - skipping
+  ballot 5 (d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb) counted for Emily Echo (weight=4/61)
+  exhaustion detected — 63 ballots, total exhausted weight=59
+STV: Round 5: ballot weight state — locked=58, active=166, total=224
+  Betty Beta elected with 89 6/61 votes
+  transferring surplus of 32 6/61 (fraction=1958/5435) from Betty Beta
+  total ballot weight BEFORE transfer = 224
+  post-transfer ballot weights — locked=115, active=109, total=224
+  total ballot weight AFTER transfer = 224
+  surplus accounting for Betty Beta — locked_to_quota=57, transferable_surplus=109
+  removing winner Betty Beta from further consideration
+  Emily Echo elected with 75 55/61 votes
+  transferring surplus of 18 55/61 (fraction=1153/4630) from Emily Echo
+  total ballot weight BEFORE transfer = 224
+  ballot d9350e1f7287aaecd0460db12a5d7c2f6bb0e8bb surplus transfer from Emily Echo (weight=2306/141215)
+  post-transfer ballot weights — locked=195 10498747/12582025, active=28 2083278/12582025, total=224
+  total ballot weight AFTER transfer = 224
+  surplus accounting for Emily Echo — locked_to_quota=1017060747/12582025, transferable_surplus=354379978/12582025
+  removing winner Emily Echo from further consideration
 
 STV summary:
 Total Votes = 224; Quota = 57
-Elected = ['Anthony Alpha', 'Betty Beta', 'David Delta']
+Elected = ['Anthony Alpha', 'Betty Beta', 'Emily Echo']
 
 Round Details:
 Round 1:
+  Elected: []
   Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo', 'Francis Foxtrot', 'Gloria Gamma']
   Totals:
     Anthony Alpha: 45
@@ -233,6 +267,7 @@ Round 1:
     Emily Echo: 38
     Francis Foxtrot: 32
 Round 2:
+  Elected: []
   Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo', 'Gloria Gamma']
   Totals:
     Anthony Alpha: 50
@@ -241,6 +276,7 @@ Round 2:
     David Delta: 43
     Emily Echo: 44
 Round 3:
+  Elected: []
   Continuing: ['Anthony Alpha', 'Betty Beta', 'David Delta', 'Emily Echo']
   Totals:
     Anthony Alpha: 61
@@ -248,12 +284,19 @@ Round 3:
     David Delta: 52
     Emily Echo: 54
 Round 4:
+  Elected: ['Anthony Alpha']
   Continuing: ['Betty Beta', 'David Delta', 'Emily Echo']
   Totals:
-    Betty Beta: 75
-    David Delta: 75
-    Emily Echo: 72
-Election Final: ['Anthony Alpha', 'Betty Beta', 'David Delta']
+    Betty Beta: 56 19/61
+    David Delta: 53 31/61
+    Emily Echo: 55 11/61
+Round 5:
+  Elected: ['Anthony Alpha']
+  Continuing: ['Betty Beta', 'Emily Echo']
+  Totals:
+    Betty Beta: 89 6/61
+    Emily Echo: 75 55/61
+Election Final: ['Anthony Alpha', 'Betty Beta', 'Emily Echo']
 ```
 
 ## Pairwise Condorcet

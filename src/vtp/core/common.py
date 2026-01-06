@@ -21,6 +21,7 @@
 
 # standard imports
 import os
+from fractions import Fraction
 
 
 class Globals:
@@ -143,3 +144,13 @@ class Globals:
                 n % 10
             ]
         return str(n) + suffix
+
+    @staticmethod
+    def mixed_number(f: Fraction) -> str:
+        whole = int(f)          # truncates toward zero
+        remainder = abs(f - whole)
+        if remainder == 0:
+            return str(whole)
+        if whole == 0:
+            return f"-{remainder}" if f < 0 else str(remainder)
+        return f"{whole} {remainder}"
