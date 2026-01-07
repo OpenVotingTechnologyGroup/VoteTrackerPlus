@@ -26,6 +26,8 @@ Run with '--help' for usage information.
 import argparse
 import re
 
+from vtp.core.common import Globals
+
 # Project imports
 from vtp.ops.tally_contests_operation import TallyContestsOperation
 
@@ -71,7 +73,7 @@ tallying across git submodules/repos.
     parser.add_argument(
         "--tally_override",
         default="",
-        help="specify a specific tally to use (plurality, rcv, pwc)",
+        help="specify a specific tally to use (plurality, rcv, pwc, stv)",
     )
     Arguments.add_output_style(parser)
     Arguments.add_verbosity(parser)
@@ -87,6 +89,10 @@ tallying across git submodules/repos.
         parsed_args.track_contests = parsed_args.track_contests.split(",")
     else:
         parsed_args.track_contests = []
+    if parsed_args.tally_override not in Globals.get("SUPPORTED_TALLIES"):
+        raise ValueError(
+            f"The --tally_override parameter only accepts: {Globals.get('SUPPORTED_TALLIES')}"
+        )
     return parsed_args
 
 

@@ -19,6 +19,9 @@
 
 import json
 import operator
+from collections import defaultdict
+from fractions import Fraction
+from math import floor
 
 import networkx as nx
 
@@ -628,7 +631,7 @@ class Tally:
         else:
             self.operation_self.imprimir_formatting("horizontal_line")
         self.operation_self.imprimir(
-            f"RCV: round {this_round}, {Globals.make_ordinal(seat)} seat", 0
+            f"RCV: round {this_round}, {Globals.make_ordinal(seat)} seat", 3
         )
 
         # ZZZ - create a function to validate incoming last place
@@ -690,7 +693,7 @@ class Tally:
         total_current_vote_count = self.get_total_vote_count(this_round)
         self.operation_self.imprimir(
             f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
-            0,
+            3,
         )
         for choice in Tally.get_choices_from_round(self.rcv_round[this_round]):
             # Note the test is '>' and NOT '>='
@@ -833,6 +836,7 @@ class Tally:
         return vote_count
 
     # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     def tallyho(
         self,
         contest_batch: list,
@@ -847,7 +851,15 @@ class Tally:
         """
         # Maybe override the tally
         if tally_override:
-            self.reference_contest["tally"] = tally_override
+            if tally_override in [
+                "plurality",
+                "rcv",
+                "pwc",
+                "stv",
+            ]:
+                self.reference_contest["tally"] = tally_override
+            else:
+                raise ValueError(f"Invalid value for tally_override ({tally_override})")
 
         # Loop over open seats. For plurality, regardless of open
         # seats there is only one iteration - a check will exit the
@@ -868,22 +880,34 @@ class Tally:
                 )
             elif self.reference_contest["tally"] == "pwc":
                 self.operation_self.imprimir("Running a pairwise Condorcet tally", 0)
+            elif self.reference_contest["tally"] == "stv":
+                # proportional STV is fundementally different in implementation
+                # then all the others.  tally and return
+                self.operation_self.imprimir("Running a proportinal STV tally", 0)
             else:
                 raise NotImplementedError(
                     f"the specified tally ({self.reference_contest['tally']}) "
                     "is not yet implemented"
                 )
 
-            # parse all the CVRs and create the first round of tallys
+            # stv is a completely separate tally implementation from that of
+            # rcv and plurality implementations
+            if self.reference_contest["tally"] == "stv":
+                # record winner order and call stv code
+                self.winner_order.append(self.rcv_round[0])
+                self.determine_stv_winners(contest_batch, checks)
+                return
+
+            # parse all the CVRs and create the first round of tallys.
+            # stv tallies do not leverage parse_and_tally_a_contest.
             total_votes = self.parse_and_tally_a_contest(
                 contest_batch, checks, tally_override
             )
             # If pairwise Condorcet, though contest votes have been
-            # counted, the actual tally is fundementally then either
+            # counted, the actual tally is fundementally different then either
             # plurality or rcv.
             if self.reference_contest["tally"] == "pwc":
-                # record the winner order, print, and return for yucks
-                # anyway
+                # record winner order and call pwc code
                 self.winner_order.append(self.rcv_round[0])
                 self.determine_condorcet_winners()
                 return
@@ -922,7 +946,7 @@ class Tally:
             total_current_vote_count = self.get_total_vote_count(0)
             self.operation_self.imprimir(
                 f"Total non-blank vote count: {total_current_vote_count} (out of {total_votes})",
-                0,
+                3,
             )
             # When multiseat RCV, print multiseat RCV header
             if int(self.reference_contest["open_positions"]) > 1:
@@ -1099,6 +1123,307 @@ class Tally:
         # Return up to open_positions winners
         seats = int(self.reference_contest.get("open_positions", 1))
         self.operation_self.imprimir(f"Condorcet winner(s): {topo_order[:seats]}", 0)
+
+    # pylint: disable=too-many-locals
+    def determine_stv_winners(
+        self,
+        contest_batch: list,
+        checks: list,
+    ):
+        """
+        Perform an STV tally on a single contest.  This is a complete
+        Droop quota proportional implementation.
+
+        Provides diagnostic printing in a similar manner to the other
+        tallies.
+        """
+
+        ballots = []
+        candidates = set()
+        seats = int(self.reference_contest.get("open_positions", 1))
+
+        # ---- Extract ballots ----
+        for a_git_cvr in contest_batch:
+            contest = a_git_cvr["contestCVR"]
+            digest = a_git_cvr["digest"]
+            ranking = contest.get("selection", [])
+            ballots.append(
+                {
+                    "digest": digest,
+                    "ranking": ranking,
+                    "weight": Fraction(1),
+                }
+            )
+            candidates.update(ranking)
+
+        if seats is None:
+            raise ValueError("STV: tally invoked with no valid contest")
+
+        continuing = set(candidates)
+        elected = []
+        rounds = []
+
+        # ---- Droop quota ----
+        total_votes = sum(b["weight"] for b in ballots)
+        quota = floor(total_votes / (seats + 1)) + 1
+
+        self.operation_self.imprimir(f"STV: quota set to {quota}", 0)
+
+        # ---- Helper: tally current votes ----
+        def tally_current(round_num):
+            totals = defaultdict(Fraction)
+            exhausted_weight = Fraction(0)
+            exhausted_ballots = 0
+
+            for count, b in enumerate(ballots):
+                for choice in b["ranking"]:
+                    if choice in continuing:
+                        totals[choice] += b["weight"]
+                        if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                            self.operation_self.imprimir(
+                                f"  ballot {count+1} ({b['digest']}) counted for {choice} "
+                                f"(weight={Globals.mixed_number(b['weight'])})",
+                                3,
+                            )
+                        break
+                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                        self.operation_self.imprimir(
+                            f"  ballot {count+1} ({b['digest']}) {choice} is no longer continuing - skipping",
+                            3,
+                        )
+                else:
+                    # ---- BALLOT EXHAUSTED ----
+                    exhausted_ballots += 1
+                    exhausted_weight += b["weight"]
+
+                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                        self.operation_self.imprimir(
+                            f"  ballot {count+1} ({b['digest']}) EXHAUSTED "
+                            f"(weight={Globals.mixed_number(b['weight'])})",
+                            3,
+                        )
+
+            # ---- Diagnostic summary for this tally ----
+            if exhausted_ballots > 0:
+                if round_num == 1:
+                    self.operation_self.imprimir(
+                        f"  found {exhausted_ballots} blank ballot(s) (weight={Globals.mixed_number(exhausted_weight)}) marking as exhausted",
+                        3,
+                    )
+                else:
+                    self.operation_self.imprimir(
+                        f"  exhaustion detected — "
+                        f"{exhausted_ballots} ballots, "
+                        f"total exhausted weight={Globals.mixed_number(exhausted_weight)}",
+                        3,
+                    )
+            return totals
+
+        # ---- Main STV loop ----
+        round_num = 1
+        # pylint: disable=too-many-nested-blocks
+        while len(elected) < seats and continuing:
+            # ---- Diagnostic: ballot state at start of round ----
+            locked_weight = sum(
+                b["weight"] for b in ballots if not b.get("ranking")
+            )
+            active_weight = sum(
+                b["weight"] for b in ballots if b.get("ranking")
+            )
+            totals = tally_current(round_num)
+            self.operation_self.imprimir(
+                f"STV: Round {round_num}: ballot weight state — "
+                f"locked={Globals.mixed_number(locked_weight)}, active={Globals.mixed_number(active_weight)}, "
+                f"total={Globals.mixed_number(locked_weight + active_weight)}",
+                3,
+            )
+            rounds.append(
+                {
+                    "round": round_num,
+                    "totals": dict(totals),
+                    "elected": elected.copy(),
+                    "continuing": sorted(continuing),
+                }
+            )
+
+            # ---- Election step ----
+            reached_quota = [c for c in continuing if totals.get(c, 0) >= quota]
+
+            if reached_quota:
+                reached_quota.sort(key=lambda c: totals[c], reverse=True)
+
+                for winner in reached_quota:
+                    if winner not in continuing:
+                        continue
+
+                    self.operation_self.imprimir(
+                        f"  {winner} elected with {Globals.mixed_number(totals[winner])} votes",
+                        0,
+                    )
+                    elected.append(winner)
+
+                    surplus = totals[winner] - quota
+
+                    if surplus > 0:
+                        transfer_fraction = surplus / totals[winner]
+
+                        # ---- Diagnostic: total weight BEFORE surplus transfer ----
+                        total_weight_before = sum(b["weight"] for b in ballots)
+
+                        self.operation_self.imprimir(
+                            f"  transferring surplus of {Globals.mixed_number(surplus)} "
+                            f"(fraction={Globals.mixed_number(transfer_fraction)}) from {winner}",
+                            3,
+                        )
+                        self.operation_self.imprimir(
+                            f"  total ballot weight BEFORE transfer = {Globals.mixed_number(total_weight_before)}",
+                            3,
+                        )
+
+                        new_ballots = []
+                        for b in ballots:
+                            # Determine current active choice for this ballot
+                            current_choice = None
+                            for choice in b["ranking"]:
+                                if choice in continuing:
+                                    # ballot is active
+                                    current_choice = choice
+                                    break
+                                # else ballot is exhausted
+
+                            if current_choice == winner:
+                                # ---- Split ballot ----
+                                transfer_weight = b["weight"] * transfer_fraction
+                                keep_weight = b["weight"] - transfer_weight
+                                if keep_weight > 0:
+                                    new_ballots.append(
+                                        {
+                                            **b,
+                                            "weight": keep_weight,
+                                            "ranking": [],  # quota-locked ballot
+                                            # to distinguish 'original full ballot' from 'surplus fragement'
+                                            # when logging total_active_weight
+                                            "locked_to": winner,
+                                        }
+                                    )
+                                if transfer_weight > 0:
+                                    if b["digest"] in checks or self.operation_self.verbosity >= 4:
+                                        self.operation_self.imprimir(
+                                            f"  ballot {b['digest']} "
+                                            f"surplus transfer from {winner} "
+                                            f"(weight={Globals.mixed_number(transfer_weight)})",
+                                            3,
+                                        )
+                                    new_ballots.append(
+                                        {
+                                            **b,
+                                            "weight": transfer_weight,
+                                        }
+                                    )
+                            else:
+                                # ---- Ballot unaffected by this surplus transfer ----
+                                new_ballots.append(b)
+
+                        ballots = new_ballots
+                        # ---- Diagnostic: locked vs active ballot weight after surplus transfer ----
+                        locked_weight = sum(
+                            b["weight"] for b in ballots if not b.get("ranking")
+                        )
+                        active_weight = sum(
+                            b["weight"] for b in ballots if b.get("ranking")
+                        )
+                        self.operation_self.imprimir(
+                            f"  post-transfer ballot weights — "
+                            f"locked={Globals.mixed_number(locked_weight)}, active={Globals.mixed_number(active_weight)}, "
+                            f"total={Globals.mixed_number(locked_weight + active_weight)}",
+                            3,
+                        )
+                        # ---- Diagnostic: total weight AFTER surplus transfer ----
+                        total_weight_after = sum(b["weight"] for b in ballots)
+                        self.operation_self.imprimir(
+                            f"  total ballot weight AFTER transfer = {Globals.mixed_number(total_weight_after)}",
+                            3,
+                        )
+
+                        # ==========================================================
+                        # WEIGHT CONSERVATION ASSERTION
+                        #
+                        # Surplus transfer must not create or destroy vote weight.
+                        # Any failure here indicates a logic error or double counting.
+                        # ==========================================================
+                        assert total_weight_before == total_weight_after, (
+                            "STV ERROR: total ballot weight changed during surplus transfer "
+                            f"(before={Globals.mixed_number(total_weight_before)}, after={Globals.mixed_number(total_weight_after)})",
+                            0,
+                        )
+
+                        locked_to_winner = sum(
+                            b["weight"] for b in ballots if b.get("locked_to") == winner
+                        )
+                        surplus_active = sum(
+                            b["weight"] for b in ballots
+                            if b.get("locked_to") is None and b.get("ranking")
+                        )
+
+                        self.operation_self.imprimir(
+                            f"  surplus accounting for {winner} — "
+                            f"locked_to_quota={locked_to_winner}, "
+                            f"transferable_surplus={surplus_active}",
+                            3,
+                        )
+
+                    continuing.remove(winner)
+                    self.operation_self.imprimir(
+                        f"  removing winner {winner} from further consideration",
+                        3,
+                    )
+                    if len(elected) >= seats:
+                        break
+            else:
+                # ---- Elimination step ----
+                loser = min(continuing, key=lambda c: totals.get(c, 0))
+                self.operation_self.imprimir(
+                    f"  eliminating {loser} with {Globals.mixed_number(totals.get(loser, 0))} votes",
+                    3,
+                )
+                continuing.remove(loser)
+            round_num += 1
+
+        # Print summary
+        # import pdb; pdb.set_trace()
+        self.operation_self.imprimir(
+            f"\nSTV summary:\nTotal Votes = {total_votes}; Quota = {quota}\n"
+            f"Elected = {elected}\n\n"
+            f"Round Details:",
+            3,
+        )
+        # Note - best if totals are always sorted in choices order
+        candidates = Contest.get_choices_from_contest(self.reference_contest["choices"])
+        candidate_order = {k: i for i, k in enumerate(candidates)}
+        for thing in rounds:
+            self.operation_self.imprimir(
+                f"Round {thing['round']}:\n"
+                f"  Elected: {thing['elected']}\n"
+                f"  Continuing: {thing['continuing']}\n"
+                f"  Totals:",
+                3,
+            )
+            # for candidate in thing["totals"]:
+            for candidate in sorted(thing["totals"], key=lambda k: candidate_order[k]):
+                self.operation_self.imprimir(
+                    f"    {candidate}: {Globals.mixed_number(thing['totals'][candidate])}",
+                    3,
+                )
+        self.operation_self.imprimir(
+            f"Election Final: {elected}",
+            0,
+        )
+
+        return {
+            "quota": quota,
+            "elected": elected,
+            "rounds": rounds,
+        }
 
 
 # EOF
