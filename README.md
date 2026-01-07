@@ -4,7 +4,7 @@
 
 VoteTracker+ (a.k.a. VTP & VoteTrackerPlus) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
 
-All types of elections are supported: traditional in-person paper based, mail-in, absentee, internet voting (iVoting) with or without paper.  Currently three [tally algorithms](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/blob/main/docs/tally-comparison.md) are supported in both single and multi-seat contests: plurality, sequential Rank Choice Vote, and pairwise Condorcet.
+All types of elections are supported: traditional in-person paper based, mail-in, absentee, internet voting (iVoting) with or without paper, etc.  Currently four [tally algorithms](docs/tally-comparison.md) are supported in both single and multi-seat contests: plurality, sequential Rank Choice Vote, proportional RCV (STV), and pairwise Condorcet.
 
 VTP cryptographically and anonymously tracks the per contest votes, supplying real [E2EV][E2EV.md] for voters and election officials.  VTP is a software only product comprised of backoffice plugins with voter and election official frontend facing components.  VTP can leverage existing election hardware infrastructure to the extent that the OEM manufacturers allow and support the installation of the VTP plugins.
 
