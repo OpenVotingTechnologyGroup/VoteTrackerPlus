@@ -37,6 +37,7 @@ help:
 	@echo "setuptools-build        - performs a setuptools local install"
 	@echo "setuptools-legacy-build - performs a legacy setuptools local install"
 	@echo "pylint                  - runs pylint"
+	@echo "flake8                  - runs flake8 (and mccabe)"
 	@echo "pytest                  - runs pytest"
 	@echo "etags                   - constructs an emacs tags table"
 	@echo "requirements.txt        - updates the python requirements file"
@@ -97,9 +98,11 @@ pylint: requirements.txt
 	pylint --recursive y ${SRC_DIR} ${TEST_DIR}
 
 # Run tests
-.PHONY: pytest
+.PHONY: pytest flake8
 pytest:
 	pytest ${TEST_DIR}
+flake8:
+	flake8 --max-line-length=100 --max-complexity 10 src
 
 # emacs tags
 ETAG_SRCS := $(shell find * -type f -name '*.py' -o -name '*.md' | grep -v defunct )
