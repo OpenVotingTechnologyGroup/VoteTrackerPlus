@@ -88,7 +88,10 @@ mock to a single ballot N times.
         "--flush_mode",
         type=int,
         default=0,
-        help="will either not flush (0 - default), flush on exit (1), or flush on each iteration (2)",
+        help=(
+            "will either not flush (0 - default), flush on exit (1), "
+            "or flush on each iteration(2)"
+            ),
         )
     # fmt: on
     parser.add_argument(

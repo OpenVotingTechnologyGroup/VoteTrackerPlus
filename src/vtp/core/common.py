@@ -147,7 +147,10 @@ class Globals:
 
     @staticmethod
     def mixed_number(f: Fraction) -> str:
-        whole = int(f)          # truncates toward zero
+        """
+        Return a fractional value as separate whole and remainder parts
+        """
+        whole = int(f)  # truncates toward zero
         remainder = abs(f - whole)
         if remainder == 0:
             return str(whole)
