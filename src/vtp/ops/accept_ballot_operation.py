@@ -637,16 +637,15 @@ class AcceptBallotOperation(Operation):
         )
 
         # Optionally version the ballot check
+        receipt_branch = None
+        qr_img = None
+        receipt_digest = None
         if receipt_file_csv and version_receipts:
             receipt_branch, qr_img, receipt_digest = self.main_handle_receipt(
                 a_ballot=a_ballot,
                 ballot_check=ballot_check,
                 the_election_config=the_election_config,
             )
-        else:
-            receipt_branch = None
-            qr_img = None
-            receipt_digest = None
 
         # Optionally merge the branches now and avoid calling
         # merge-contests later. Note - this will serialize the ballots

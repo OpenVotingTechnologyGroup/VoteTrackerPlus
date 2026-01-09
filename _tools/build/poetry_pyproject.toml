@@ -25,7 +25,9 @@ poetry-plugin-export = "^1.7.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+flake8 = "^7.3.0"
 isort = "^6.0.1"
+mccabe = "^0.7.0"
 mypy = "^1.16.1"
 pylint = "^3.1.0"
 pytest = "^8.4.1"

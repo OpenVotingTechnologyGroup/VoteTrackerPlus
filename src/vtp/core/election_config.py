@@ -172,7 +172,7 @@ class ElectionConfig:
     @staticmethod
     def check_config_syntax(config: dict, filename: str):
         """Validate the config.yaml syntax"""
-        bad_keys = [key for key in config if not key in ElectionConfig._config_keys]
+        bad_keys = [key for key in config if key not in ElectionConfig._config_keys]
         if bad_keys:
             raise KeyError(
                 f"File ({filename}): "
@@ -183,7 +183,7 @@ class ElectionConfig:
     def check_address_map_syntax(address_map: dict, filename: str):
         """Validate the address_map.yaml syntax"""
         bad_keys = [
-            key for key in address_map if not key in ElectionConfig._address_map_keys
+            key for key in address_map if key not in ElectionConfig._address_map_keys
         ]
         if bad_keys:
             raise KeyError(
@@ -196,7 +196,7 @@ class ElectionConfig:
                 bad_keys = [
                     key
                     for key in entry
-                    if not key in ElectionConfig._address_map_subkeys
+                    if key not in ElectionConfig._address_map_subkeys
                 ]
                 if bad_keys:
                     raise KeyError(

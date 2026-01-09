@@ -81,7 +81,7 @@ class CastBallotOperation(Operation):
             print(
                 f"- This is a {tally} tally with {max_selections} open "
                 f"position{'s' * (max_selections != 1)}/choice{'s' * (max_selections != 1)}.  "
-                f"Up to {len(choices)} selection{'s'[:len(choices)^1]} can be rank choosen."
+                f"Up to {len(choices)} selection{'s'[:len(choices) ^ 1]} can be rank choosen."
             )
 
         # Need to print the choices first up front
