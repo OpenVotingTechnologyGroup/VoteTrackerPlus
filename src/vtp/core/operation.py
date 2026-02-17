@@ -127,6 +127,7 @@ class Operation:
         """allow setting the verbosity (and nothing else) on the run"""
         self.verbosity = verbosity
 
+    # pylint: disable=too-many-branches
     def imprimir_formatting(
         self,
         a_construct: str,
