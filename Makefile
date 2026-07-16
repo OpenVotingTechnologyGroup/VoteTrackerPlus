@@ -64,14 +64,16 @@ poetry-build:
 poetry-list-latest:
 	poetry show -o
 poetry-update:
-	@echo "1st: start a poetry shell:     $$ poetry shell"
-	@echo "2nd: update poetry itself:     $$ poetry self update"
-	@echo "3rd: see what needs updating:  $$ make poetry-list-latest"
-	@echo "4th: manually update explicitly listed packages in pyproject.toml"
-	@echo "5th: update everything else:   $$ poetry update"
-	@echo "6th: test with pylint:         $$ make pylint"
-	@echo "7th: test with pytest:         $$ make pytest"
-	@echo "8th: run manual tests by running an mock election"
+	@echo "Pre: consider updating brew and poetry (and have brew manage poetry)"
+	@echo "     $$ brew outdated; brew upgrade"
+	@echo "Note: run '$$ poetry install' once to install this VTP installation"
+	@echo "1st: start a poetry shell:          $$ poetry env activate"
+	@echo "2nd: see what needs updating:       $$ make poetry-list-latest"
+	@echo "3rd: maybe manually update explicitly listed packages in pyproject.toml"
+	@echo "4th: maybe update everything else:  $$ poetry update"
+	@echo "5th: test with pylint:              $$ make pylint"
+	@echo "6th: test with pytest:              $$ make pytest"
+	@echo "7th: run manual tests by running an mock election"
 
 # Build with setuptools
 .PHONY: setuptools-build
