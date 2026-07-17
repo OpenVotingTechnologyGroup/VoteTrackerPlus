@@ -44,11 +44,9 @@ This project is not yet completely there process wise.
 
 ## 4) Current Development Process
 
-The current development process is in flux as the project is still being occasionally refactored as needed.
+The current development process has mostly settled on using poetry to manage the python environment and python packages.  For MacOS, homebrew is used to install pipx and pipx is used to install poetry.  Thus, there is one set of standard packages (homebrew) with a single pipx installation (nominally found in /opt/homebrew/bin/pipx for Apple Silicon) and a single poetry (nominally found in /Users/homebrew/.local/bin/poetry when using an isolated homebrew account to manage homebrew packages).  And then poetry is used to manage the pythons needed for each poetry python environment.
 
 ### 4.1) One time poetry installation
-
-Currently Votetracker+ is using [poetry](https://python-poetry.org/) as the python package and dependency manager.  The base python is currently 3.10.  However, any python environment manager the employs pyproject.toml files can be used.
 
 Mac example:
 
@@ -61,6 +59,9 @@ $ brew install pipx
 
 # install poetry - see https://python-poetry.org/docs#installation
 $ pipx install poetry
+
+# the Makefile build process needs the poetry export command:
+$ pipx inject poetry poetry-plugin-export
 ```
 
 ### 4.2) Clone a mock election repo and this repo
@@ -81,7 +82,7 @@ $ poetry install
 If using poetry, from the same root of the VoteTrackerPlus git repo:
 
 ```bash
-$ poetry shell
+$ poetry env activate
 ```
 
 ### 4.5) Odds and Ends

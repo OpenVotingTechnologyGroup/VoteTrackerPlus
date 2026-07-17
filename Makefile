@@ -29,8 +29,8 @@ endif
 .PHONY: help
 help:
 	@echo "${RED}There is no default make target.${END}  Specify one of:"
-	@echo "poetry-build            - performs a poetry local install"
-	@echo "poetry-link             - refreshes local (poetry file) symlinks"
+	@echo "poetry-local-install    - performs a poetry local install (run once)"
+	@echo "poetry-link             - refreshes local poetry project symlinks"
 	@echo "poetry-update           - instructions for updating poetry, python,"
 	@echo "                          and the installed python packages"
 	@echo "poetry-list-latest      - will show which poetry packages have updates"
@@ -56,7 +56,7 @@ poetry-link:
 	rm -f ${BUILD_FILES}
 	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml
 	ln -s ${BUILD_DIR}/poetry_poetry.lock poetry.lock
-poetry-build:
+poetry-local-install:
 	rm -f ${BUILD_FILES}
 	ln -s ${BUILD_DIR}/poetry_pyproject.toml pyproject.toml
 	ln -s ${BUILD_DIR}/poetry_poetry.lock poetry.lock
@@ -64,9 +64,9 @@ poetry-build:
 poetry-list-latest:
 	poetry show -o
 poetry-update:
-	@echo "Pre: consider updating brew and poetry (and have brew manage poetry)"
+	@echo "Pre: consider updating brew and pipx (pipx manages poetry)"
 	@echo "     $$ brew outdated; brew upgrade"
-	@echo "Note: run '$$ poetry install' once to install this VTP installation"
+	@echo "Note: run '$$ make poetry-local-install' once"
 	@echo "1st: start a poetry shell:          $$ poetry env activate"
 	@echo "2nd: see what needs updating:       $$ make poetry-list-latest"
 	@echo "3rd: maybe manually update explicitly listed packages in pyproject.toml"
