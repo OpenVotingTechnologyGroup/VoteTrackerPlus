@@ -2,7 +2,7 @@
 
 [![CodeQL](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus/actions/workflows/codeql-analysis.yml)
 
-VoteTracker+ (a.k.a. VTP & VoteTrackerPlus) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
+VoteTrackerPlus (a.k.a. VTP or VoteTracker+) is a 100% open source project that offers a verifiable guarantee directly to the voter that their ballot is correctly cast and tallied.  This guarantee directly increases the security, accuracy, and trustworthiness of elections regardless how they are held.
 
 All types of elections are supported: traditional in-person paper based, mail-in, absentee, internet voting (iVoting) with or without paper, etc.  Currently four [tally algorithms](docs/tally-comparison.md) are supported in both single and multi-seat contests: plurality, sequential Rank Choice Vote, proportional RCV (STV), and pairwise Condorcet.
 
@@ -10,7 +10,18 @@ VTP cryptographically and anonymously tracks the per contest votes, supplying re
 
 Read the [pitch](docs/pitch.md), an [executive summary](https://docs.google.com/document/d/1vNaitQpqWkAESnY_DFsIbUO_yz1K_QZ53JBhXiGsi3E), ask for a live demo, or download the repos and run your own live demo.  The demo consists of separate python uvicorn web and tabulator servers running on Linux or MacOS, the web server providing a iVoting experience for any LAN/WAN connected devices.  End voters can vote a demo ballot containing 4 plurality and one RCV contest.  As it is a demo, with the tabulation server running in demo mode voters can tally the election at any time and verify that their ballot has been cast and tallied as intended, all within a single demo experience.
 
-See the [VTP-dev-env git repo](https://github.com/OpenVotingTechnologyGroup/VTP-dev-env) for overall project level information.  That repo includes this repo and the latest mock election repo as git submodules.  That repo also includes a Makefile with the necessary commands to clone everything and run a mock VTP election, including manually casting ballots in parallel with N simulated in-person voting center VTP ballot scanners and one VTP tabulator.  See the [src/vtp/README.md](src/vtp/README.md) file for more details.
+The VoteTrackerPlus project is comprised of a four or more git repositories:
+
+| Git Repository | Contents | Development Notes |
+| --- | --- | --- |
+| an ElectionData git repository tree | Contains the ElectionData - the definition of the election (address, contest, and tally information etc); all blank ballots; all Cast Vote Records (contest CVR's) and ballot receipts | See [VTP-mock-election.US.17](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.US.17) or [VTP-mock-election.sRCV.1](https://github.com/OpenVotingTechnologyGroup/VTP-mock-election.sRCV.1) as examples |
+| [VTP-web-api](https://github.com/OpenVotingTechnologyGroup/VTP-web-api) | Contains the python FastAPI & uvicorn based web API | main branch has linear history with signed commits |
+| [VTP-web-client](https://github.com/OpenVotingTechnologyGroup/VTP-web-client) | Contains the html/css/javascript client front end | main branch has linear history with signed commits |
+| [VoteTrackerPlus](https://github.com/OpenVotingTechnologyGroup/VoteTrackerPlus) | Contains the python based backend | main branch has linear history with signed commits |
+
+See the [src/vtp/README.md](src/vtp/README.md) file in this repo for more software/technical details.
+
+See the [VTP-dev-env git repo](https://github.com/OpenVotingTechnologyGroup/VTP-dev-env) for overall project level information.  That repo also includes a Makefile with the necessary commands to clone everything and run a mock VTP election.  The demo includes the ability for participants to cast ballots in parallel via a simulated in-person voting center with VTP ballot scanners and one tabulator.
 
 ## 1) Overview
 
