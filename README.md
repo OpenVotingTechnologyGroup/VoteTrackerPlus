@@ -50,6 +50,8 @@ VoteTracker+ is NOT a:
 * ballot scanner nor contains ballot scanning software - VoteTracker+ receives the interpreted ballot from the ballot scanner, or in the case of iVoting, from the VTP web interface itself
 * replacement for paper ballots - VoteTracker+ requires the balloting process to start and end with a paper ballot
 
+An open source ledger based voter ID and registration solution is covered by the [RegistrationTrackerPlus](https://github.com/OpenVotingTechnologyGroup/RegistrationTrackerPlus) project.
+
 ## 2) 10,000 Foot Overview
 
 The VTP root repo (this repo) is meant to be directly integrated via a git submodule with a VTP ElectionData directory tree which is comprised of one or more git submodules (though as of this writing and stage of agile software development, an OS level symbolic-link is typically used instead).  An VTP ElectionData tree is a directory tree that _componentizes_ the backend election configuration data into separate GGOs (Geopolitical Geographical Overlays - NIST calls this a [geopolitical unit](https://pages.nist.gov/ElectionGlossary/#geopolitical-unit)).  Each GGO can have is its own [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) authority or share another GGO's RBAC.  Independent of the GGO components the ElectionData tree supports arbitrary git submodule componentization which ultimately allows a [Voting Center](https://pages.nist.gov/ElectionGlossary/#vote-center) to operate completely disconnected from an external computer network.
@@ -60,7 +62,13 @@ A diagram representing the high level in-person voter experience is located [her
 
 A diagram representing the high level mail-in ballot workflow is located [here](https://drive.google.com/file/d/107M8GcjGfCZ7Vu1j__OT7xYtE-D-xiia/view?usp=sharing) (Google Drive).
 
-## 3) Additional Details
+## 3) Demos
+
+There are two demos available for play.  The first demo is command line based and self contained in the VoteTrackerPlus repo.  The Makefile there has more details.  The demo does require a VTP ElectionData tree for storing the election configuration and election data.
+
+The second demo is more involved and requires wiring the three VTP code repos together with a VTP ElectionData tree.  This demo allows participants to cast votes on their own personal smart devices as well as validate their ballot receipts and tally contests.  Depending on the network configuration, this can be a live test over the internet or a local only live test disconnectedd from the internet using an isolated router.
+
+## 4) Additional Details
 
 For a more detailed overview, see the file [./docs/project-overview.md](./docs/project-overview.md) in this git repo.  The docs folder also contains the current [pitch](./docs/pitch.md) as well as an [informal security description](./docs/informal-security-description.md).  There is a high level scurity threat model located at [VoteTracker+ Threat Model Mind Map](https://mm.tt/1939443508?t=DuNY3bTVbg).  See [docs/E2EV.md](docs/E2EV.md) for more examples of the current basic command line interface.
 
@@ -68,7 +76,7 @@ VoteTracker+ is intended to be compliant to the sensible extent possible [NIST](
 
 VoteTracker+ will attempt to leverage as much code and prior art as possible. There are several possible alternatives for standing up a pilot; if you have suggestions please get in touch.
 
-## <a name="ElectionGuardb"></a>4) Other Voting Solutions
+## <a name="ElectionGuardb"></a>5) Other Voting Solutions
 
 The following is a short and incomplete list of other voting projects that are of relevance:
 
@@ -91,11 +99,11 @@ Finally, unlike the ElectionGuard and blockchain voting implementations, VTP is 
 
 For more information contact Sandy Currier at: sandy at osetinstitute dot org
 
-## 5) Development
+## 6) Development
 
 See the [src/vtp/README.md](src/vtp/README.md) for notes regarding running and writing code.
 
-## 6) Status - 2022/07/19
+## 7) Status - 2022/07/19
 
 VoteTracker+ is currently in the early design phase with a downloadable CLI demo. The current priorities are:
 * Technical peer reviews
@@ -104,7 +112,7 @@ VoteTracker+ is currently in the early design phase with a downloadable CLI demo
 
 Crowdfunding is also possible - a preliminary project video is available at [https://www.youtube.com/watch?v=V0EuZHNHZ6A](https://www.youtube.com/watch?v=V0EuZHNHZ6A)
 
-VoteTracker+ is currently using GitHub's beta [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/OpenVotingTechnologyGroup/projects/1/views/1).  The project pages are currently private - get involved or join the team to gain access to it.  :-)
+VoteTracker+ is currently using GitHub's [project planning for developers](https://github.com/features/issues) for the [VoteTracker+ Project Plan](https://github.com/orgs/OpenVotingTechnologyGroup/projects/1/views/1).  The project pages are currently private - get involved or join the team to gain access to it.  :-)
 
 [Cast Vote Record]: https://pages.nist.gov/ElectionGlossary/#cast-vote-record
 [E2EV.md]: docs/E2EV.md
