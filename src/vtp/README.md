@@ -82,7 +82,7 @@ $ poetry install
 If using poetry, from the same root of the VoteTrackerPlus git repo:
 
 ```bash
-$ poetry env activate
+$ eval "$(poetry env activate)"
 ```
 
 ### 4.5) Odds and Ends
